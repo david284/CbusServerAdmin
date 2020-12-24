@@ -39,7 +39,7 @@ var options = {
 	format: timeStampFirst
   },
   console: {
-    level: 'warn',
+    level: 'info',
     handleExceptions: true,
 	format: messageOnly
   },
