@@ -17,7 +17,7 @@
   "author": "Nigel Phillips",
   "license": "MIT",
   "dependencies": {
-    "cbuslibrary": "^0.0.2",
+    "cbuslibrary": "^1.0.0",
     "chai": "^4.2.0",
     "express": "^4.17.1",
     "jsonfile": "^6.1.0",
@@ -31,7 +31,7 @@
     "socket.io": "^2.3.0",
     "typeface-roboto": "0.0.75",
     "vue": "^2.6.12",
-    "vuetify": "^2.3.19",
+    "vuetify": "^2.3.21",
     "vuex": "^3.6.0",
     "winston": "^3.3.3"
   },
