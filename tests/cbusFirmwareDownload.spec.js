@@ -52,6 +52,12 @@ describe('cbusFirmwareDownload tests', function(){
         done();
 	});
 
+	it('Download test2', function(done) {
+		winston.info({message: 'cbusFirmwareDownload Test:'});
+		cbusFirmwareDownload('./tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
+        done();
+	});
+
 
   
 
