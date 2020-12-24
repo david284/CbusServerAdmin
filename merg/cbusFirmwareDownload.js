@@ -23,7 +23,9 @@ function decodeLine(line) {
     var CHKSUM = parseInt(line.substr(line.length - 2, 2), 16)
     
     // Check to see if the persistant variables has been initialized
+    if ( typeof decodeLine.chunkIndex == 'undefined' ) { decodeLine.chunkIndex = 0; }
     if ( typeof decodeLine.offset == 'undefined' ) { decodeLine.offset = 0; }
+    if ( typeof decodeLine.area == 'undefined' ) { decodeLine.area = 'default'; }
     if ( typeof decodeLine.extAddressHex == 'undefined' ) { decodeLine.extAddressHex = '00'; }
     if ( typeof decodeLine.startAddressHex == 'undefined' ) { decodeLine.startAddressHex = '000000'; }
     
@@ -45,15 +47,24 @@ function decodeLine(line) {
         // So, three choices - start new array, start new 'chunk' in existing array, or insert into existing 'chunk'
         var a = (decodeLine.offset>>4)
         var b = (OFFSET>>4)
-        if(a == b) { // same chunk
-            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk ' + a});
+        if (a == b) { // same chunk
+            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk '  + decodeLine.area + ' ' + decodeLine.startAddressHex + ' ' + decToHex(decodeLine.chunkIndex, 4) + ' ' + a});
+            if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][0] == 'undefinded') {
+                winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk - prep array '});
+                for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
+            }
         } else if (a + 1 == b) { // next chunk
             winston.debug({message: 'CBUS Download: line decode: Data Record: Next chunk ' + a + ' ' + b});
             decodeLine.offset += 16
+            decodeLine.chunkIndex += 16;
+            for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
         } else { // must be new array then
             winston.debug({message: 'CBUS Download: line decode: Data Record: New array ' + a + ' ' + b});
             decodeLine.startAddressHex = decodeLine.extAddressHex + decToHex(b<<4, 4)
+            if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
             decodeLine.offset = b << 4
+            decodeLine.chunkIndex = 0;
+            for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
         }
         
         // the above code assumes each 'line' fits into a 16 byte chunk, arranged on a 16 byte boundary
@@ -61,19 +72,27 @@ function decodeLine(line) {
         if ( (OFFSET % 16) + RECLEN > 16) {
             winston.debug({message: 'CBUS Download: line decode: Data Record: *************************** ERROR - straddles boundary'});
         }
-        
+       
       winston.debug({message: 'CBUS Download: line decode: Data Record: OFFSET ' + decToHex(OFFSET, 4) + ' length ' + RECLEN});
-      if (PROGRAM_MEMORY[decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.startAddressHex] = []}
+      if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
       for (var i = 0; i < RECLEN; i++) {
-        PROGRAM_MEMORY[decodeLine.startAddressHex].push(parseInt(data.substr(i*2,2),16))
+        PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][decodeLine.chunkIndex + i + OFFSET%16] = (parseInt(data.substr(i*2, 2), 16))
       }
+
+      var chunkLine = []
+      for (var i = 0; i < 16; i++) { 
+        chunkLine.push(decToHex(PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][decodeLine.chunkIndex + i], 2))
+      }
+      winston.debug({message: 'CBUS Download: line decode: Chunk Line:  ' + decodeLine.area + ' ' + decodeLine.startAddressHex + ' ' + decToHex(decodeLine.chunkIndex, 4) + ' ' + chunkLine});
     }
 
     if ( RECTYP == 1) {
       winston.debug({message: 'CBUS Download: line decode: End of File Record:'});
-      for (const item in PROGRAM_MEMORY) {
-        winston.debug({message: 'CBUS Download: line decode: PROGRAM_MEMORY: ' + JSON.stringify(item) + '  ' + PROGRAM_MEMORY[item].length});          
-      }
+        for (const area in PROGRAM_MEMORY) {
+            for (const block in PROGRAM_MEMORY[area]) {
+                winston.debug({message: 'CBUS Download: line decode: PROGRAM_MEMORY: ' + area + ':' + block + '  ' + PROGRAM_MEMORY[area][block].length});
+            }
+        }
     }
 
     if ( RECTYP == 2) {
@@ -88,17 +107,22 @@ function decodeLine(line) {
       winston.debug({message: 'CBUS Download: line decode: Extended Linear Address Record: ' + data});
       if (data == '0000') {
           winston.debug({message: 'CBUS Download: line decode: PROGRAM MEMORY'})
+          decodeLine.area = 'PROGRAM'
           decodeLine.extAddressHex = '00'
       }
       if (data == '0030') {
           winston.debug({message: 'CBUS Download: line decode: CONFIG MEMORY'})
+          decodeLine.area = 'CONFIG'
           decodeLine.extAddressHex = '30'
       }
       if (data == '00F0') {
           winston.debug({message: 'CBUS Download: line decode: EEPROM MEMORY'})
+          decodeLine.area = 'EEPROM'
           decodeLine.extAddressHex = 'F0'
       }
-      decodeLine.extAddressHex
+      
+      if (PROGRAM_MEMORY[decodeLine.area] == undefined) {PROGRAM_MEMORY[decodeLine.area] = []}
+      if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
     }
 
     if ( RECTYP == 5) {
