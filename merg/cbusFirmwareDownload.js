@@ -14,7 +14,7 @@ function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().pad
 var FIRMWARE = {}
 
 
-function decodeLine(line) {
+function decodeLine(line, callback) {
     var MARK = line.substr(0,1)
     var RECLEN = parseInt(line.substr(1,2), 16)
     var OFFSET = parseInt(line.substr(3,4), 16)
@@ -91,6 +91,7 @@ function decodeLine(line) {
                 winston.info({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
             }
         }        
+        if(callback) callback();
     }
 
     if ( RECTYP == 2) {
@@ -114,8 +115,6 @@ function decodeLine(line) {
     if ( RECTYP == 5) {
       winston.debug({message: 'CBUS Download: line decode: Start Linear Address Record:'});
     }
-    
-    return FIRMWARE
 }
 
 function arrayChecksum(array) {
@@ -143,8 +142,8 @@ function readHexFile(fileName) {
     input: fs.createReadStream(fileName),
     });
   
-    readInterface.on('line', function(line, firmware) {
-      firmware = decodeLine(line)
+    readInterface.on('line', function(line) {
+      decodeLine(line)
     });  
 }
 
@@ -194,4 +193,4 @@ module.exports = cbusFirmwareDownload;
 module.exports.arrayChecksum = arrayChecksum;
 module.exports.readHexFile = readHexFile;
 module.exports.readFirmware = readFirmware;
-
+module.exports.decodeLine = decodeLine;
