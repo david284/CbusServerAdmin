@@ -11,7 +11,7 @@ const EventEmitter = require('events').EventEmitter;
 
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
-let FIRMWARE = {}
+var FIRMWARE = {}
 
 
 function decodeLine(line) {
@@ -114,6 +114,8 @@ function decodeLine(line) {
     if ( RECTYP == 5) {
       winston.debug({message: 'CBUS Download: line decode: Start Linear Address Record:'});
     }
+    
+    return FIRMWARE
 }
 
 function arrayChecksum(array) {
@@ -128,11 +130,12 @@ function arrayChecksum(array) {
 
 
 function readHexFile(fileName) {
+    
     try {
       var intelHexString = fs.readFileSync(fileName);
     } catch (err) {
         // emit file error
-        winston.debug({message: 'CBUS Download: File read: ' + err});
+        winston.info({message: 'CBUS Download: File read: ' + err});
         return;
     }
     
@@ -140,12 +143,17 @@ function readHexFile(fileName) {
     input: fs.createReadStream(fileName),
     });
   
-    readInterface.on('line', function(line) {
-      decodeLine(line)
+    readInterface.on('line', function(line, firmware) {
+      firmware = decodeLine(line)
     });  
-    
-    return FIRMWARE
 }
+
+function readFirmware() {
+        return FIRMWARE
+}
+    
+
+
 
 function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
   
@@ -185,4 +193,5 @@ function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
 module.exports = cbusFirmwareDownload;
 module.exports.arrayChecksum = arrayChecksum;
 module.exports.readHexFile = readHexFile;
+module.exports.readFirmware = readFirmware;
 
