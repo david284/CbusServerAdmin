@@ -46,18 +46,37 @@ describe('cbusFirmwareDownload tests', function(){
     // 
     //
 
+	it('Checksum test', function(done) {
+		winston.info({message: 'cbusFirmware Checksum Test:'});
+        // expect to get two's compliment of 16 bit checksum returned
+        var array = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
+        // checksum of above is 06F9, so two's complement is F907
+        var expected  = 'F907'
+        expect(cbusFirmwareDownload.arrayChecksum(array)).to.equal(expected);
+        done();
+	});
+
+	it('Read Hex File test', function(done) {
+		winston.info({message: 'cbusFirmwareDownload Test:'});
+		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX');
+        done();
+	});
+
+
+
 	it('Download test', function(done) {
 		winston.info({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
         done();
 	});
 
+/*
 	it('Download test2', function(done) {
 		winston.info({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload('./tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
         done();
 	});
-
+*/
 
   
 

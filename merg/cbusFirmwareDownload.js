@@ -11,7 +11,7 @@ const EventEmitter = require('events').EventEmitter;
 
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
-    let PROGRAM_MEMORY = {}
+let FIRMWARE = {}
 
 
 function decodeLine(line) {
@@ -23,6 +23,7 @@ function decodeLine(line) {
     var CHKSUM = parseInt(line.substr(line.length - 2, 2), 16)
     
     // Check to see if the persistant variables has been initialized
+    if ( typeof decodeLine.checksum == 'undefined' ) { decodeLine.checksum = 0; }
     if ( typeof decodeLine.index == 'undefined' ) { decodeLine.index = 0; }
     if ( typeof decodeLine.area == 'undefined' ) { decodeLine.area = 'default'; }
     if ( typeof decodeLine.extAddressHex == 'undefined' ) { decodeLine.extAddressHex = '0000'; }
@@ -49,19 +50,20 @@ function decodeLine(line) {
         
         if (a == b) { // same chunk
 //            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk ' + a});
-            if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
-            if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][0] == undefined) {
+            if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
+            if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex][0] == undefined) {
                 winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk - prep array '});
-                for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
+                for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
             }
         } else if (a + 1 == b) { // next chunk
             decodeLine.index += 16
-            for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
+            for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
         } else { // must be new array then
             decodeLine.startAddressHex = decodeLine.extAddressHex + decToHex(OFFSET & 0xFFE0, 4)
-            if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
+            if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             decodeLine.index = 0
-            for (var i = 0; i < 16; i++) { PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex].push(255)}
+            decodeLine.checksum = 0;
+            for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
         }
         
         // the above code assumes each 'line' fits into a 16 byte chunk, arranged on a 16 byte boundary
@@ -70,25 +72,25 @@ function decodeLine(line) {
             winston.debug({message: 'CBUS Download: line decode: Data Record: *************************** ERROR - straddles boundary'});
         }
        
-      if (PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] == undefined) {PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex] = []}
+      if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
       for (var i = 0; i < RECLEN; i++) {
-        PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][decodeLine.index + i + OFFSET%16] = (parseInt(data.substr(i*2, 2), 16))
+        FIRMWARE[decodeLine.area][decodeLine.startAddressHex][decodeLine.index + i + OFFSET%16] = (parseInt(data.substr(i*2, 2), 16))
       }
 
       var chunkLine = []
       for (var i = 0; i < 16; i++) { 
-        chunkLine.push(decToHex(PROGRAM_MEMORY[decodeLine.area][decodeLine.startAddressHex][decodeLine.index + i], 2))
+        chunkLine.push(decToHex(FIRMWARE[decodeLine.area][decodeLine.startAddressHex][decodeLine.index + i], 2))
       }
       winston.debug({message: 'CBUS Download: line decode: Chunk Line:  ' + decodeLine.area + ' ' + decodeLine.startAddressHex + ' ' + decToHex(decodeLine.index, 4) + ' ' + chunkLine});
     }
 
     if ( RECTYP == 1) {
-      winston.debug({message: 'CBUS Download: line decode: End of File Record:'});
-        for (const area in PROGRAM_MEMORY) {
-            for (const block in PROGRAM_MEMORY[area]) {
-                winston.info({message: 'CBUS Download: line decode: PROGRAM_MEMORY: ' + area + ':' + block + '  ' + PROGRAM_MEMORY[area][block].length});
+        winston.debug({message: 'CBUS Download: line decode: End of File Record:'});
+        for (const area in FIRMWARE) {
+            for (const block in FIRMWARE[area]) {
+                winston.info({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
             }
-        }
+        }        
     }
 
     if ( RECTYP == 2) {
@@ -106,23 +108,28 @@ function decodeLine(line) {
       if (data == '00F0') {decodeLine.area = 'EEPROM'}
       decodeLine.extAddressHex = data
       winston.debug({message: 'CBUS Download: ******** NEW MEMORY AREA: ' + decodeLine.area + ' area address ' + data })
-      if (PROGRAM_MEMORY[decodeLine.area] == undefined) {PROGRAM_MEMORY[decodeLine.area] = []}
+      if (FIRMWARE[decodeLine.area] == undefined) {FIRMWARE[decodeLine.area] = []}
     }
 
     if ( RECTYP == 5) {
       winston.debug({message: 'CBUS Download: line decode: Start Linear Address Record:'});
     }
-
-    
-
-//      winston.debug({message: '--'});
 }
 
-function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
-  
+function arrayChecksum(array) {
+    var checksum = 0;
+    for (var i = 0; i <array.length; i++) {
+        checksum += array[i]
+        checksum = checksum & 0xFFFF        // trim to 16 bits
+    }
+    // return checksum as two's complement in hexadecimal
+    return decToHex((checksum ^ 0xFFFF) + 1, 4)
+}
+
+
+function readHexFile(fileName) {
     try {
       var intelHexString = fs.readFileSync(fileName);
-//      winston.debug({message: 'CBUS Download: File read: ' + intelHexString});
     } catch (err) {
         // emit file error
         winston.debug({message: 'CBUS Download: File read: ' + err});
@@ -131,15 +138,18 @@ function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
     
   const readInterface = readline.createInterface({
     input: fs.createReadStream(fileName),
-//    output: process.stdout,
-//    console: false
     });
   
     readInterface.on('line', function(line) {
-//      winston.debug({message: 'CBUS Download: File read: ' + line});
       decodeLine(line)
     });  
+    
+    return FIRMWARE
+}
+
+function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
   
+    readHexFile(fileName)
   
   
     let client = new net.Socket()
@@ -173,4 +183,6 @@ function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
 
 
 module.exports = cbusFirmwareDownload;
+module.exports.arrayChecksum = arrayChecksum;
+module.exports.readHexFile = readHexFile;
 
