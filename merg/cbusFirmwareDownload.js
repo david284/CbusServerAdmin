@@ -8,10 +8,7 @@ let cbusLib = require('cbuslibrary')
 const EventEmitter = require('events').EventEmitter;
 
 
-
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
-
-var firmware = {}
 
 
 function decodeLine(FIRMWARE, line, callback) {
@@ -23,7 +20,6 @@ function decodeLine(FIRMWARE, line, callback) {
     var CHKSUM = parseInt(line.substr(line.length - 2, 2), 16)
     
     // Check to see if the persistant variables has been initialized
-    if ( typeof decodeLine.checksum == 'undefined' ) { decodeLine.checksum = 0; }
     if ( typeof decodeLine.index == 'undefined' ) { decodeLine.index = 0; }
     if ( typeof decodeLine.area == 'undefined' ) { decodeLine.area = 'default'; }
     if ( typeof decodeLine.extAddressHex == 'undefined' ) { decodeLine.extAddressHex = '0000'; }
@@ -37,8 +33,8 @@ function decodeLine(FIRMWARE, line, callback) {
       ' CHKSUM ' + CHKSUM });
 
     //
-    // address in the hex file is extended linear address plus OFFSET
-    // index in the array is startAddressHex + index in array 
+    // address of line start in the hex file is extAddressHex + OFFSET
+    // address of line start in the array is startAddressHex + index in array 
     //
 
     if ( RECTYP == 0) { // Data Record:
@@ -62,7 +58,6 @@ function decodeLine(FIRMWARE, line, callback) {
             decodeLine.startAddressHex = decodeLine.extAddressHex + decToHex(OFFSET & 0xFFE0, 4)
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             decodeLine.index = 0
-            decodeLine.checksum = 0;
             for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
         }
         
@@ -131,6 +126,7 @@ function arrayChecksum(array) {
 
 
 function readHexFile(FILENAME, CALLBACK) {
+    var firmware = {}
     
     try {
       var intelHexString = fs.readFileSync(FILENAME);
@@ -152,7 +148,8 @@ function readHexFile(FILENAME, CALLBACK) {
                     winston.info({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
                 }
             }  
-            if(CALLBACK) {CALLBACK(firmwareObject);}            
+            if(CALLBACK) {CALLBACK(firmwareObject)}
+            else {winston.info({message: 'CBUS Download: read hex file: WARNING - No EOF callback'})}
         })
     });  
 }
@@ -191,7 +188,7 @@ function download (FILENAME, NET_ADDRESS, NET_PORT) {
 
 class cbusFirmwareDownload extends EventEmitter  {
     download (FILENAME, NET_ADDRESS, NET_PORT) {download (FILENAME, NET_ADDRESS, NET_PORT)}
-    readHexFile(fileName) {readHexFile(fileName)}
+    readHexFile(fileName, callback) {readHexFile(fileName, callback)}
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
     readFirmware() {return readFirmware()}
     arrayChecksum(array) {return arrayChecksum(array)}

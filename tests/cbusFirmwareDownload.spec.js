@@ -57,13 +57,13 @@ describe('cbusFirmwareDownload tests', function(){
 
 	it('Read Hex File test', function(done) {
 		winston.info({message: 'cbusFirmware Read Hex File Test:'});
-		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX');
-        setTimeout(function(){
-            var firmware = cbusFirmwareDownload.readFirmware()
-            winston.info({message: 'cbusFirmware Read Hex File test: FIRMWARE: ' + JSON.stringify(firmware)});
-            expect(firmware["PROGRAM"]['00000800'].length).to.equal(6064, 'PROGRAM length');
-            done();
-        }, 2000)
+		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
+            function(firmwareObject){ 
+                winston.info({message: 'cbusFirmware Read Hex File Test: callback: ' + JSON.stringify(firmwareObject)});
+                expect(firmwareObject["PROGRAM"]['00000800'].length).to.equal(6064, 'PROGRAM length'); 
+                done();
+            }
+        );
 	});
 
 /*
