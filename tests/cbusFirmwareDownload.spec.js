@@ -15,7 +15,6 @@ const NET_ADDRESS = "127.0.0.1"
 describe('cbusFirmwareDownload tests', function(){
   	let mock_Cbus = new Mock_Cbus.mock_CbusNetwork(NET_PORT);
     
-
 	before(function(done) {
 		winston.info({message: ' '});
 		winston.info({message: '======================================================================'});
@@ -67,12 +66,13 @@ describe('cbusFirmwareDownload tests', function(){
         }, 2000)
 	});
 
+/*
 	it('Read Hex missing File test', function(done) {
 		winston.info({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
         done();
 	});
-
+*/
 
 	it('decode line test', function(done) {
 		winston.info({message: 'decode line Test:'});
@@ -87,7 +87,7 @@ describe('cbusFirmwareDownload tests', function(){
 
 	it('Download test', function(done) {
 		winston.info({message: 'cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
+		cbusFirmwareDownload.download('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
         done();
 	});
 

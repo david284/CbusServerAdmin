@@ -123,8 +123,9 @@ function arrayChecksum(array) {
         checksum += array[i]
         checksum = checksum & 0xFFFF        // trim to 16 bits
     }
-    // return checksum as two's complement in hexadecimal
-    return decToHex((checksum ^ 0xFFFF) + 1, 4)
+    var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
+    winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
+    return checksum2C
 }
 
 
@@ -152,31 +153,36 @@ function readFirmware() {
 }
     
 
+function download (FILENAME, NET_ADDRESS, NET_PORT) {
+  
+        readHexFile(FILENAME)
+      
+        let client = new net.Socket()
+        client.connect(NET_PORT, NET_ADDRESS, function () {
+            winston.debug({message: 'CBUS Download: Client Connected'});
+        })
+        
+        client.on('error', (err) => {
+            winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
+        })
+        
+        client.on('close', function () {
+            winston.debug({message: 'CBUS Download: Connection Closed'});
+        })
+
+        setTimeout(() => {
+            client.destroy();
+            winston.debug({message: 'CBUS Download: Client closed normally'});
+        }, 200)
+    }  
 
 
-function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
-  
-    readHexFile(fileName)
-  
-  
-    let client = new net.Socket()
-    client.connect(NET_PORT, NET_ADDRESS, function () {
-        winston.debug({message: 'CBUS Download: Client Connected'});
-    })
-    
-    client.on('error', (err) => {
-        winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
-    })
-    
-    client.on('close', function () {
-        winston.debug({message: 'CBUS Download: Connection Closed'});
-    })
-
-    setTimeout(() => {
-        client.destroy();
-        winston.debug({message: 'CBUS Download: Client closed normally'});
-    }, 200)
-  
+class cbusFirmwareDownload {
+    download (FILENAME, NET_ADDRESS, NET_PORT) {download (FILENAME, NET_ADDRESS, NET_PORT)}
+    decodeLine(line, callback) { decodeLine(line, callback)}
+    readHexFile(fileName) {readHexFile(fileName)}
+    readFirmware() {return readFirmware()}
+    arrayChecksum(array) {return arrayChecksum(array)}
 };
 
 
@@ -187,10 +193,4 @@ function cbusFirmwareDownload(fileName, NET_ADDRESS, NET_PORT) {
 
     }
 
-
-
-module.exports = cbusFirmwareDownload;
-module.exports.arrayChecksum = arrayChecksum;
-module.exports.readHexFile = readHexFile;
-module.exports.readFirmware = readFirmware;
-module.exports.decodeLine = decodeLine;
+module.exports = new cbusFirmwareDownload();
