@@ -11,10 +11,10 @@ const EventEmitter = require('events').EventEmitter;
 
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
-var FIRMWARE = {}
+var firmware = {}
 
 
-function decodeLine(line, callback) {
+function decodeLine(FIRMWARE, line, callback) {
     var MARK = line.substr(0,1)
     var RECLEN = parseInt(line.substr(1,2), 16)
     var OFFSET = parseInt(line.substr(3,4), 16)
@@ -91,7 +91,8 @@ function decodeLine(line, callback) {
                 winston.debug({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
             }
         }        
-        if(callback) callback();
+        if(callback) {callback(FIRMWARE);}
+        else {winston.debug({message: 'CBUS Download: line decode: WARNING - No EOF callback'})}
     }
 
     if ( RECTYP == 2) {
@@ -129,10 +130,10 @@ function arrayChecksum(array) {
 }
 
 
-function readHexFile(fileName) {
+function readHexFile(FILENAME, CALLBACK) {
     
     try {
-      var intelHexString = fs.readFileSync(fileName);
+      var intelHexString = fs.readFileSync(FILENAME);
     } catch (err) {
         // emit file error
         winston.info({message: 'CBUS Download: File read: ' + err});
@@ -140,31 +141,33 @@ function readHexFile(fileName) {
     }
     
   const readInterface = readline.createInterface({
-    input: fs.createReadStream(fileName),
+    input: fs.createReadStream(FILENAME),
     });
   
     readInterface.on('line', function(line) {
-      decodeLine(line, endOfFileCallback)
+        decodeLine(firmware, line, function (firmwareObject) {
+            winston.info({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
+            for (const area in firmwareObject) {
+                for (const block in firmwareObject[area]) {
+                    winston.info({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
+                }
+            }  
+            if(CALLBACK) {CALLBACK(firmwareObject);}            
+        })
     });  
 }
 
-function endOfFileCallback () {
-    winston.info({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'});
-        for (const area in FIRMWARE) {
-            for (const block in FIRMWARE[area]) {
-                winston.info({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
-            }
-        }        
-}
 
 function readFirmware() {
-        return FIRMWARE
+        return firmware
 }
     
 
 function download (FILENAME, NET_ADDRESS, NET_PORT) {
   
-        readHexFile(FILENAME)
+        readHexFile(FILENAME, function (firmwareObject) {
+            winston.info({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
+        })
       
         let client = new net.Socket()
         client.connect(NET_PORT, NET_ADDRESS, function () {
@@ -189,7 +192,7 @@ function download (FILENAME, NET_ADDRESS, NET_PORT) {
 class cbusFirmwareDownload extends EventEmitter  {
     download (FILENAME, NET_ADDRESS, NET_PORT) {download (FILENAME, NET_ADDRESS, NET_PORT)}
     readHexFile(fileName) {readHexFile(fileName)}
-    decodeLine(line, callback) { decodeLine(line, callback)}
+    decodeLine(array, line, callback) { decodeLine(array, line, callback)}
     readFirmware() {return readFirmware()}
     arrayChecksum(array) {return arrayChecksum(array)}
 };

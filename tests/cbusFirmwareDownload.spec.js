@@ -77,7 +77,8 @@ describe('cbusFirmwareDownload tests', function(){
 	it('decode line test', function(done) {
 		winston.info({message: 'decode line Test:'});
         var resultFlag = false
-		cbusFirmwareDownload.decodeLine(':00000001FF', function(){ resultFlag = true; console.log('decode line callback');});
+        var firmware = {}
+		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ resultFlag = true; console.log('decode line callback');});
         expect(resultFlag).to.equal(true, 'resultFlag');
         done();
 	});
