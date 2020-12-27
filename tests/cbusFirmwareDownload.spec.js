@@ -85,7 +85,7 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 
-	it('Download test', function(done) {
+	it('Download full test', function(done) {
 		winston.info({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload.download('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
         done();

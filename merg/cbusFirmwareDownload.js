@@ -88,7 +88,7 @@ function decodeLine(line, callback) {
         winston.debug({message: 'CBUS Download: line decode: End of File Record:'});
         for (const area in FIRMWARE) {
             for (const block in FIRMWARE[area]) {
-                winston.info({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
+                winston.debug({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
             }
         }        
         if(callback) callback();
@@ -144,8 +144,17 @@ function readHexFile(fileName) {
     });
   
     readInterface.on('line', function(line) {
-      decodeLine(line)
+      decodeLine(line, endOfFileCallback)
     });  
+}
+
+function endOfFileCallback () {
+    winston.info({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'});
+        for (const area in FIRMWARE) {
+            for (const block in FIRMWARE[area]) {
+                winston.info({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
+            }
+        }        
 }
 
 function readFirmware() {
@@ -177,10 +186,10 @@ function download (FILENAME, NET_ADDRESS, NET_PORT) {
     }  
 
 
-class cbusFirmwareDownload {
+class cbusFirmwareDownload extends EventEmitter  {
     download (FILENAME, NET_ADDRESS, NET_PORT) {download (FILENAME, NET_ADDRESS, NET_PORT)}
-    decodeLine(line, callback) { decodeLine(line, callback)}
     readHexFile(fileName) {readHexFile(fileName)}
+    decodeLine(line, callback) { decodeLine(line, callback)}
     readFirmware() {return readFirmware()}
     arrayChecksum(array) {return arrayChecksum(array)}
 };
