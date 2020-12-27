@@ -32,7 +32,7 @@ describe('cbusFirmwareDownload tests', function(){
 	after(function(done) {
    		winston.info({message: ' '});   // blank line to separate tests
         setTimeout(() => {
-            winston.debug({message: 'cbusFirmwareDownload tests: Tests ended'});
+            winston.debug({message: 'TEST: cbusFirmwareDownload: Tests ended'});
             done();
         }, 1000)
 	});																										
@@ -46,7 +46,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 
 	it('Checksum test', function(done) {
-		winston.info({message: 'cbusFirmware Checksum Test:'});
+		winston.debug({message: 'cbusFirmware Checksum Test:'});
         // expect to get two's compliment of 16 bit checksum returned
         var array = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
         // checksum of above is 06F9, so two's complement is F907
@@ -56,10 +56,10 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 	it('Read Hex File test', function(done) {
-		winston.info({message: 'cbusFirmware Read Hex File Test:'});
+		winston.debug({message: 'cbusFirmware Read Hex File Test:'});
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
             function(firmwareObject){ 
-                winston.info({message: 'cbusFirmware Read Hex File Test: callback: ' + JSON.stringify(firmwareObject)});
+                winston.debug({message: 'cbusFirmware Read Hex File Test: callback: ' + JSON.stringify(firmwareObject)});
                 expect(firmwareObject["PROGRAM"]['00000800'].length).to.equal(6064, 'PROGRAM length'); 
                 done();
             }
@@ -68,17 +68,17 @@ describe('cbusFirmwareDownload tests', function(){
 
 /*
 	it('Read Hex missing File test', function(done) {
-		winston.info({message: 'cbusFirmwareDownload Test:'});
+		winston.debug({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
         done();
 	});
 */
 
 	it('decode line test', function(done) {
-		winston.info({message: 'decode line Test:'});
+		winston.debug({message: 'decode line Test:'});
         var resultFlag = false
         var firmware = {}
-		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ resultFlag = true; console.log('decode line callback');});
+		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ resultFlag = true;});
         expect(resultFlag).to.equal(true, 'resultFlag');
         done();
 	});
@@ -87,14 +87,14 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 	it('Download full test', function(done) {
-		winston.info({message: 'cbusFirmwareDownload Test:'});
+		winston.debug({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload.download('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
         done();
 	});
 
 /*
 	it('Download test2', function(done) {
-		winston.info({message: 'cbusFirmwareDownload Test:'});
+		winston.debug({message: 'cbusFirmwareDownload Test:'});
 		cbusFirmwareDownload('./tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
         done();
 	});

@@ -46,37 +46,37 @@ describe('mergAdminNode tests', function(){
 	let node = new admin.cbusAdmin(directory, NET_ADDRESS,NET_PORT);
 
 	before(function(done) {
-		winston.info({message: ' '});
-		winston.info({message: '======================================================================'});
-		winston.info({message: '------------------------ mergAdminNode tests -------------------------'});
-		winston.info({message: '======================================================================'});
-		winston.info({message: ' '});
+		winston.debug({message: ' '});
+		winston.debug({message: '======================================================================'});
+		winston.debug({message: '------------------------ mergAdminNode tests -------------------------'});
+		winston.debug({message: '======================================================================'});
+		winston.debug({message: ' '});
         
             
        
 
         // request nodes & then allow some time to process them
-        winston.info({message: '..................................................'});
-        winston.info({message: 'Start by querying all nodes to populate structures'});
-        winston.info({message: '..................................................'});
+        winston.debug({message: '..................................................'});
+        winston.debug({message: 'Start by querying all nodes to populate structures'});
+        winston.debug({message: '..................................................'});
         node.cbusSend(node.QNN())
 		setTimeout(function(){
-            winston.info({message: '............................'});
-            winston.info({message: 'Query completed.............'});
-            winston.info({message: '............................'});
+            winston.debug({message: '............................'});
+            winston.debug({message: 'Query completed.............'});
+            winston.debug({message: '............................'});
 			done();
 		}, 20);
 	});
     
     beforeEach(function() {
-   		winston.info({message: ' '});   // blank line to separate tests
+   		winston.debug({message: ' '});   // blank line to separate tests
         mock_Cbus.clearSendArray()
     })
 
 	after(function() {
-   		winston.info({message: ' '});   // blank line to separate tests
+   		winston.debug({message: ' '});   // blank line to separate tests
 		mock_Cbus.stopServer();
-		winston.info({message: 'Close mergAdminNode test Client'});
+		winston.debug({message: 'Close mergAdminNode test Client'});
 
 	});																										
 	
@@ -88,7 +88,7 @@ describe('mergAdminNode tests', function(){
     // 00 ACK
     //
 	it('ACK test', function(done) {
-		winston.info({message: 'mergAdminNode Test: ACK test'});
+		winston.debug({message: 'mergAdminNode Test: ACK test'});
 		mock_Cbus.outputACK();
         done();
 	});
@@ -97,7 +97,7 @@ describe('mergAdminNode tests', function(){
     // 0D QNN encoding test
     //
 	it('QNN encoding test', function() {
-		winston.info({message: 'mergAdminNode test: BEGIN QNN test '});
+		winston.debug({message: 'mergAdminNode test: BEGIN QNN test '});
 		expect(node.QNN()).to.equal(":SB780N0D;");
 
 	});
@@ -106,7 +106,7 @@ describe('mergAdminNode tests', function(){
     // 10 RQNP encoding test
     //
 	it("RQNP encoding test", function () {
-		winston.info({message: 'mergAdminNode test: BEGIN RQNP test '});
+		winston.debug({message: 'mergAdminNode test: BEGIN RQNP test '});
 		expected = ":SB780N10" + ";";
 		expect(node.RQNP()).to.equal(expected);
 	})
@@ -128,11 +128,11 @@ describe('mergAdminNode tests', function(){
     // 21 KLOC
     //
 	itParam("KLOC test session ${value.session}", GetTestCase_KLOC(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN KLOC test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN KLOC test ' + JSON.stringify(value)});
         node.dccSessions = []   // clear any pre existing session from previous tests
         node.on('dccSessions', function tmp(data) {
 			dccSessionsData = data;
-			winston.info({message: 'mergAdminNode Test: KLOC test - message data : ' + JSON.stringify(dccSessionsData)});
+			winston.debug({message: 'mergAdminNode Test: KLOC test - message data : ' + JSON.stringify(dccSessionsData)});
             node.removeListener('dccSessions', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputKLOC(value.session);
@@ -161,7 +161,7 @@ describe('mergAdminNode tests', function(){
     // 22 QLOC encoding
     //
 	itParam("QLOC encoding test: session ${value.session}", GetTestCase_QLOC(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN QLOC test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN QLOC test ' + JSON.stringify(value)});
 		expected = ":SA780N22" + decToHex(value.session, 2) + ";";
 		expect(node.QLOC(value.session)).to.equal(expected);
 	})
@@ -183,11 +183,11 @@ describe('mergAdminNode tests', function(){
     // 23 DKEEP
     //
 	itParam("DKEEP test session ${value.session}", GetTestCase_DKEEP(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN DKEEP test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN DKEEP test ' + JSON.stringify(value)});
         node.dccSessions = []   // clear any pre existing session from previous tests
         node.on('dccSessions', function tmp(data) {
 			dccSessionsData = data;
-			winston.info({message: 'mergAdminNode Test: KLOC test - message data : ' + JSON.stringify(dccSessionsData)});
+			winston.debug({message: 'mergAdminNode Test: KLOC test - message data : ' + JSON.stringify(dccSessionsData)});
             node.removeListener('dccSessions', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputDKEEP(value.session);
@@ -224,10 +224,10 @@ describe('mergAdminNode tests', function(){
     // 47 DSPD
     //
 	itParam("DSPD test session ${value.session} speed ${value.speed} direction ${value.direction}", GetTestCase_DSPD(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN DSPD test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN DSPD test ' + JSON.stringify(value)});
         node.on('dccSessions', function tmp(data) {
 			dccSessionsData = data;
-			winston.info({message: 'mergAdminNode Test: DSPD test - message data : ' + JSON.stringify(dccSessionsData)});
+			winston.debug({message: 'mergAdminNode Test: DSPD test - message data : ' + JSON.stringify(dccSessionsData)});
             node.removeListener('dccSessions', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputDSPD(value.session, value.speed, value.direction);
@@ -255,11 +255,11 @@ describe('mergAdminNode tests', function(){
     // 50 RQNN
     //
 	itParam("RQNN test nodeNumber ${value.nodeNumber}", GetTestCase_RQNN(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN RQNN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN RQNN test ' + JSON.stringify(value)});
         var eventReceived = false;
         node.on('requestNodeNumber', function tmp(data) {
             eventReceived = true
-			winston.info({message: 'mergAdminNode Test: RQNN test - event received : ' + eventReceived});
+			winston.debug({message: 'mergAdminNode Test: RQNN test - event received : ' + eventReceived});
             node.removeListener('requestNodeNumber', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputRQNN(value.nodeNumber);
@@ -287,7 +287,7 @@ describe('mergAdminNode tests', function(){
     // 53 NNLRN encoding
     //
 	itParam("NNLRN encoding test nodeId ${value.nodeId}", GetTestCase_NNLRN(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NNLRN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NNLRN test ' + JSON.stringify(value)});
 		expected = ":SB780N53" + decToHex(value.nodeId, 4) + ";";
 		expect(node.NNLRN(value.nodeId)).to.equal(expected);
 	})
@@ -309,7 +309,7 @@ describe('mergAdminNode tests', function(){
     // 53 NNLRN invalid tests
     //
 	itParam("NNLRN test invalid nodeId ${value.nodeId}", GetTestCase_NNLRN_invalid(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NNLRN invalid test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NNLRN invalid test ' + JSON.stringify(value)});
 		var expected;	// leave undefined
 		expect(node.NNLRN(value.nodeId)).to.equal(expected);
 	})
@@ -331,7 +331,7 @@ describe('mergAdminNode tests', function(){
     // 54 NNULN encoding
     //
 	itParam("NNULN encoding test: nodeId ${value.nodeId}", GetTestCase_NNULN(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NNULN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NNULN test ' + JSON.stringify(value)});
 		expected = ":SB780N54" + decToHex(value.nodeId, 4) + ";";
 		expect(node.NNULN(value.nodeId)).to.equal(expected);
 	})
@@ -353,7 +353,7 @@ describe('mergAdminNode tests', function(){
     // 57 NERD encoding
     //
 	itParam("NERD encoding test: nodeId ${value.nodeId}", GetTestCase_NERD(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NERD test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NERD test ' + JSON.stringify(value)});
 		expected = ":SB780N57" + decToHex(value.nodeId, 4) + ";";
 		expect(node.NERD(value.nodeId)).to.equal(expected);
 	})
@@ -375,7 +375,7 @@ describe('mergAdminNode tests', function(){
     // 58 RQEVN encoding test
     //
 	itParam("RQEVN encoding test: nodeId ${value.nodeId}", GetTestCase_RQEVN(),  function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN RQEVN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN RQEVN test ' + JSON.stringify(value)});
 		expected = ":SB780N58" + decToHex(value.nodeId, 4) + ";";
 		expect(node.RQEVN(value.nodeId)).to.equal(expected);
 	})
@@ -411,10 +411,10 @@ describe('mergAdminNode tests', function(){
     // 60 DFUN
     //
 	itParam("DFUN test: session ${value.session} Fn1 ${value.Fn1} Fn2 ${value.Fn2}", GetTestCase_DFUN(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN DFUN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN DFUN test ' + JSON.stringify(value)});
         node.on('dccSessions', function tmp(data) {
 			dccSessionsData = data;
-			winston.info({message: 'mergAdminNode Test: DFUN test - message data : ' + JSON.stringify(dccSessionsData)});
+			winston.debug({message: 'mergAdminNode Test: DFUN test - message data : ' + JSON.stringify(dccSessionsData)});
             node.removeListener('dccSessions', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputDFUN(value.session, value.speed, value.direction);
@@ -452,10 +452,10 @@ describe('mergAdminNode tests', function(){
     // 63 ERR
     //
 	itParam("ERR test: data1 ${value.data1} data2 ${value.data2} errorNumber ${value.errorNumber}", GetTestCase_ERR(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ERR test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ERR test ' + JSON.stringify(value)});
         node.on('dccError', function tmp(data) {
 			errorData = data;
-			winston.info({message: 'mergAdminNode Test: ERR test - message data : ' + JSON.stringify(errorData)});
+			winston.debug({message: 'mergAdminNode Test: ERR test - message data : ' + JSON.stringify(errorData)});
             node.removeListener('dccError', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputERR(value.data1, value.data2, value.errorNumber);
@@ -489,10 +489,10 @@ describe('mergAdminNode tests', function(){
     // 6F CMDERR
     //
 	itParam("CMDERR test: nodeNumber ${value.nodeNumber} errorNumber ${value.errorNumber}", GetTestCase_CMDERR(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN CMDERR test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN CMDERR test ' + JSON.stringify(value)});
         node.on('cbusError', function tmp(data) {
 			errorData = data;
-			winston.info({message: 'mergAdminNode Test: CMDERR test - message data : ' + JSON.stringify(errorData)});
+			winston.debug({message: 'mergAdminNode Test: CMDERR test - message data : ' + JSON.stringify(errorData)});
             node.removeListener('cbusError', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputCMDERR(value.nodeNumber, value.errorNumber);
@@ -527,7 +527,7 @@ describe('mergAdminNode tests', function(){
     // 71 NVRD encoding
     //
 	itParam("NVRD encoding test: nodeId ${value.nodeId} nvIndex ${value.nvIndex}", GetTestCase_NVRD(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NVRD test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NVRD test ' + JSON.stringify(value)});
 		expected = ":SB780N71" + decToHex(value.nodeId, 4) + decToHex(value.nvIndex, 2) + ";";
 		expect(node.NVRD(value.nodeId, value.nvIndex)).to.equal(expected);
 	})
@@ -536,7 +536,7 @@ describe('mergAdminNode tests', function(){
     // 71 NVRD
     //
 	itParam("NVRD test:  nodeId ${value.nodeId} nvIndex ${value.nvIndex}", GetTestCase_NVRD(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NVRD test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NVRD test ' + JSON.stringify(value)});
 		mock_Cbus.outputNVRD(value.nodeNumber, value.nvIndex);
         // currently not a supported opcode, just ensures it doesn't crash
     done()
@@ -566,7 +566,7 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("NENRD encoding test nodeNumber ${value.nodeNumber} eventIndex ${value.eventIndex}", GetTestCase_NENRD(), function (value) {
 		// NENRD Format: [<MjPri><MinPri=3><CANID>]<72><NN hi><NN lo><EN#>
-		winston.info({message: 'mergAdminNode test: BEGIN NENRD test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NENRD test ' + JSON.stringify(value)});
 		expected = ":SB780N72" + decToHex(value.nodeId, 4) + decToHex(value.eventIndex, 2) + ";";
 		expect(node.NENRD(value.nodeId, value.eventIndex)).to.equal(expected);
     })
@@ -594,7 +594,7 @@ describe('mergAdminNode tests', function(){
     // 73 RQNPN encoding test
     //
 	itParam("RQNPN encoding test: nodeId ${value.nodeId} paramIndex ${value.paramIndex}", GetTestCase_RQNPN(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN RQNPN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN RQNPN test ' + JSON.stringify(value)});
 		expected = ":SB780N73" + decToHex(value.nodeId, 4) + decToHex(value.paramIndex, 2) + ";";
 		expect(node.RQNPN(value.nodeId, value.paramIndex)).to.equal(expected);
 	})
@@ -621,7 +621,7 @@ describe('mergAdminNode tests', function(){
     // 74 NUMEV
     //
 	itParam("NUMEV test: nodeNumber ${value.nodeNumber} eventCount ${value.eventCount}", GetTestCase_NUMEV(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NUMEV test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NUMEV test ' + JSON.stringify(value)});
         mock_Cbus.outputNUMEV(value.nodeNumber, value.eventCount);
 		setTimeout(function(){
             expect(node.config.nodes[value.nodeNumber].EvCount).to.equal(value.eventCount);
@@ -651,7 +651,7 @@ describe('mergAdminNode tests', function(){
 	// 90 ACON encoding
     //
 	itParam("ACON encoding test: nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber}", GetTestCase_ACONF(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ACON outgoing test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ACON outgoing test ' + JSON.stringify(value)});
 		expected = ":SB780N90" + decToHex(value.nodeNumber, 4) + decToHex(value.eventNumber, 4) + ";";
 		expect(node.ACON(value.nodeNumber, value.eventNumber)).to.equal(expected);
 		done();
@@ -660,11 +660,11 @@ describe('mergAdminNode tests', function(){
     // 90 ACON Incoming
     //
 	itParam("ACON incoming test: nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber}", GetTestCase_ACONF(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ACON incoming test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ACON incoming test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACON(value.nodeNumber, value.eventNumber);
@@ -682,7 +682,7 @@ describe('mergAdminNode tests', function(){
 	// 91 ACOF encoding
     //
 	itParam("ACOF encoding test: nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber}", GetTestCase_ACONF(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ACOF test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ACOF test ' + JSON.stringify(value)});
 		expected = ":SB780N91" + decToHex(value.nodeNumber, 4) + decToHex(value.eventNumber, 4) + ";";
 		expect(node.ACOF(value.nodeNumber, value.eventNumber)).to.equal(expected);
 		done();
@@ -691,11 +691,11 @@ describe('mergAdminNode tests', function(){
     // 91 ACOF Incoming
     //
 	itParam("ACOF incoming test: nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber}", GetTestCase_ACONF(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ACOF incoming test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ACOF incoming test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACOF(value.nodeNumber, value.eventNumber);
@@ -726,7 +726,7 @@ describe('mergAdminNode tests', function(){
     // 95 EVULN encoding
     //
 	itParam("EVULN encoding test: event ${value.event}", GetTestCase_EVULN(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN EVULN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN EVULN test ' + JSON.stringify(value)});
 		expected = ":SB780N95" + value.event + ";";
 		expect(node.EVULN(value.event)).to.equal(expected);
 	})
@@ -758,7 +758,7 @@ describe('mergAdminNode tests', function(){
     // 96 NVSET encoding
     //
 	itParam("NVSET encoding test: nodeId ${value.nodeId} nvIndex ${value.nvIndex} nvValue ${value.nvValue}", GetTestCase_NVSET(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NVSET test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NVSET test ' + JSON.stringify(value)});
 		expected = ":SB780N96" + decToHex(value.nodeId, 4) + decToHex(value.nvIndex, 2) + decToHex(value.nvValue, 2) + ";";
 		expect(node.NVSET(value.nodeId, value.nvIndex, value.nvValue)).to.equal(expected);
 	})
@@ -788,7 +788,7 @@ describe('mergAdminNode tests', function(){
 	}
     //
 	itParam("NVANS test: nodeNumber ${value.nodeNumber} nvIndex ${value.nvIndex} nvValue ${value.nvValue}", GetTestCase_NVANS(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN NVANS test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN NVANS test ' + JSON.stringify(value)});
         mock_Cbus.outputNVANS(value.nodeNumber, value.nvIndex, value.nvValue);
 		setTimeout(function(){
             expect(node.config.nodes[value.nodeNumber].variables[value.nvIndex]).to.equal(value.nvValue)
@@ -819,7 +819,7 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASON encoding test: nodeNumber ${value.nodeNumber} deviceNum ${value.deviceNum}", GetTestCase_ACCESSORY_SHORT(), function (value) {
 		// Format: [<MjPri><MinPri=3><CANID>]<98><NN hi><NN lo><DN hi><DN lo>
-		winston.info({message: 'mergAdminNode test: BEGIN ASON test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ASON test ' + JSON.stringify(value)});
 		expected = ":SB780N98" + decToHex(value.nodeNumber, 4) + decToHex(value.deviceNum, 4) + ";";
 		expect(node.ASON(value.nodeNumber, value.deviceNum)).to.equal(expected);
 	})
@@ -827,11 +827,11 @@ describe('mergAdminNode tests', function(){
     // 98 ASON Incoming
     //
 	itParam("ASON incoming test: nodeNumber ${value.nodeNumber} deviceNum ${value.deviceNum}", GetTestCase_ACCESSORY_SHORT(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ASON incoming test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ASON incoming test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ASON incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ASON incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASON(value.nodeNumber, value.deviceNum);
@@ -850,7 +850,7 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASOF encoding test: nodeNumber ${value.nodeNumber} deviceNum ${value.deviceNum}", GetTestCase_ACCESSORY_SHORT(), function (value) {
 		// Format: [<MjPri><MinPri=3><CANID>]<99><NN hi><NN lo><DN hi><DN lo>
-		winston.info({message: 'mergAdminNode test: BEGIN ASOF test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ASOF test ' + JSON.stringify(value)});
 		expected = ":SB780N99" + decToHex(value.nodeNumber, 4) + decToHex(value.deviceNum, 4) + ";";
 		expect(node.ASOF(value.nodeNumber, value.deviceNum)).to.equal(expected);
 	})
@@ -858,11 +858,11 @@ describe('mergAdminNode tests', function(){
     // 99 ASOF Incoming
     //
 	itParam("ASOF incoming test: nodeNumber ${value.nodeNumber} deviceNum ${value.deviceNum}", GetTestCase_ACCESSORY_SHORT(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN ASOF incoming test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN ASOF incoming test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ASOF incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ASOF incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASOF(value.nodeNumber, value.deviceNum);
@@ -903,7 +903,7 @@ describe('mergAdminNode tests', function(){
     // 9B PARAN
     //
 	itParam("PARAN test: nodeNumber ${value.nodeNumber} parameterIndex ${value.parameterIndex} parameterValue ${value.parameterValue}", GetTestCase_PARAN(), function (done, value) {
-		winston.info({message: 'mergAdminNode test: BEGIN PARAN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN PARAN test ' + JSON.stringify(value)});
         mock_Cbus.outputPARAN(value.nodeNumber, value.parameterIndex, value.parameterValue);
 		setTimeout(function(){
             expect(node.config.nodes[value.nodeNumber].parameters[value.parameterIndex]).to.equal(value.parameterValue)
@@ -938,7 +938,7 @@ describe('mergAdminNode tests', function(){
     // 9C REVAL encoding
     //
 	itParam("REVAL encoding test: nodeId ${value.nodeId} eventIndex ${value.eventIndex} eventValue ${value.eventValue}", GetTestCase_REVAL(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN REVAL test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN REVAL test ' + JSON.stringify(value)});
 		expected = ":SB780N9C" + decToHex(value.nodeId, 4) + decToHex(value.eventIndex, 2) + decToHex(value.eventValue, 2) + ";";
 		expect(node.REVAL(value.nodeId, value.eventIndex, value.eventValue)).to.equal(expected);
 	})
@@ -974,11 +974,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACON1 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1}",
         GetTestCase_ACONF1(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACON1 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACON1 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON1 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON1 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACON1(value.nodeNumber, value.eventNumber, value.data1, value.data2);
@@ -998,11 +998,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACOF1 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1}",
         GetTestCase_ACONF1(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACOF2 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACOF2 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF1 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF1 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACOF1(value.nodeNumber, value.eventNumber, value.data1);
@@ -1050,7 +1050,7 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("NEVAL test: nodeNumber ${value.nodeNumber} eventIndex ${value.eventIndex} eventVariableIndex ${value.eventVariableIndex} eventVariableValue ${value.eventVariableValue}", 
         GetTestCase_NEVAL(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN NEVAL test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN NEVAL test ' + JSON.stringify(value)});
         node.cbusSend(node.NERD(value.nodeNumber))  // need to update events in system before proceeding
 		setTimeout(function(){
             mock_Cbus.outputNEVAL(value.nodeNumber, value.eventIndex, value.eventVariableIndex, value.eventVariableValue);
@@ -1092,7 +1092,7 @@ describe('mergAdminNode tests', function(){
     // PNN Format: [<MjPri><MinPri=3><CANID>]<B6><NN Hi><NN Lo><Manuf Id><Module Id><Flags>
 	itParam("PNN test: nodeNumber ${value.nodeNumber} manufacturerId ${value.manufacturerId} moduleId ${value.moduleId} flags ${value.flags}", 
         GetTestCase_PNN(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN PNN test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN PNN test ' + JSON.stringify(value)});
             mock_Cbus.outputPNN(value.nodeNumber, value.manufacturerId, value.moduleId, value.flags);
             setTimeout(function(){
                 expect(node.config.nodes[value.nodeNumber].flags).to.equal(value.flags)
@@ -1131,11 +1131,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASON1 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1}",
         GetTestCase_ASONF1(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASON1 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASON1 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON1 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON1 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASON1(value.nodeNumber, value.deviceNumber, value.data1, value.data2);
@@ -1155,11 +1155,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASOF1 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1}",
         GetTestCase_ASONF1(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASOF1 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASOF1 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASOF1(value.nodeNumber, value.deviceNumber, value.data1);
@@ -1211,11 +1211,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACON2 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1} data2 ${value.data2}",
         GetTestCase_ACONF2(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACON2 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACON2 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON2 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON2 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACON2(value.nodeNumber, value.eventNumber, value.data1, value.data2);
@@ -1235,11 +1235,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACOF2 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1} data2 ${value.data2}",
         GetTestCase_ACONF2(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACOF2 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACOF2 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACOF2(value.nodeNumber, value.eventNumber, value.data1, value.data2);
@@ -1281,7 +1281,7 @@ describe('mergAdminNode tests', function(){
     // D2 EVLRN encoding
     //
 	itParam("EVLRN encoding test: event ${value.event} eventIndex ${value.eventIndex} eventValue ${value.eventValue}", GetTestCase_EVLRN(), function (value) {
-		winston.info({message: 'mergAdminNode test: BEGIN EVLRN test ' + JSON.stringify(value)});
+		winston.debug({message: 'mergAdminNode test: BEGIN EVLRN test ' + JSON.stringify(value)});
 		expected = ":SB780ND2" + value.event + decToHex(value.eventIndex, 2) + decToHex(value.eventValue, 2) + ";";
 		expect(node.EVLRN(value.event, value.eventIndex, value.eventValue)).to.equal(expected);
 	})
@@ -1323,11 +1323,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASON2 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1} data2 ${value.data2}",
         GetTestCase_ASONF2(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASON2 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASON2 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON2 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON2 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASON2(value.nodeNumber, value.deviceNumber, value.data1, value.data2);
@@ -1347,11 +1347,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASOF2 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1} data2 ${value.data2}",
         GetTestCase_ASONF3(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASOF2 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASOF2 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF2 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASOF2(value.nodeNumber, value.deviceNumber, value.data1, value.data2);
@@ -1419,10 +1419,10 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("PLOC test: session ${value.session} address ${value.address} speed ${value.speed} direction ${value.direction} Fn1 ${value.Fn1} Fn2 ${value.Fn2} Fn3 ${value.Fn3}",
         GetTestCase_PLOC(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN PLOC test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN PLOC test ' + JSON.stringify(value)});
             node.on('dccSessions', function tmp(data) {
                 dccSessionsData = data;
-                winston.info({message: 'mergAdminNode Test: PLOC test - message data : ' + JSON.stringify(dccSessionsData)});
+                winston.debug({message: 'mergAdminNode Test: PLOC test - message data : ' + JSON.stringify(dccSessionsData)});
                 node.removeListener('dccSessions', tmp);    // remove event listener after first event
             })
             mock_Cbus.outputPLOC(value.session, value.address, value.speed, value.direction, value.Fn1, value.Fn2, value.Fn3)
@@ -1483,11 +1483,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACON3 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1} data2 ${value.data2} data3 ${value.data3}",
         GetTestCase_ACONF3(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACON3 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACON3 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON3 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON3 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACON3(value.nodeNumber, value.eventNumber, value.data1, value.data2, value.data3);
@@ -1507,11 +1507,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ACOF3 test nodeNumber ${value.nodeNumber} eventNumber ${value.eventNumber} data1 ${value.data1} data2 ${value.data2} data3 ${value.data3}",
         GetTestCase_ACONF3(), function (done, value) {
-        winston.info({message: 'mergAdminNode test: BEGIN ACOF3 test ' + JSON.stringify(value)});
+        winston.debug({message: 'mergAdminNode test: BEGIN ACOF3 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF3 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF3 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputACOF3(value.nodeNumber, value.eventNumber, value.data1, value.data2, value.data3);
@@ -1554,12 +1554,12 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ENRSP test: nodeNumber ${value.nodeNumber} eventName ${value.eventName} eventIndex ${value.eventIndex}",
         GetTestCase_ENRSP(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ENRSP test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ENRSP test ' + JSON.stringify(value)});
             // ENRSP Format: [<MjPri><MinPri=3><CANID>]<F2><NN hi><NN lo><EN3><EN2><EN1><EN0><EN#>
             node.config.nodes[value.nodeNumber].actions=[]  // clear events
             node.on('nodes', function tmp(data) {
                 nodeData = data;
-                winston.info({message: 'mergAdminNode Test: ENRSP test - message data : ' + JSON.stringify(nodeData)});
+                winston.debug({message: 'mergAdminNode Test: ENRSP test - message data : ' + JSON.stringify(nodeData)});
                 node.removeListener('nodes', tmp);    // remove event listener after first event
             })
             mock_Cbus.outputENRSP(value.nodeNumber, value.eventName, value.eventIndex)
@@ -1612,11 +1612,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASON3 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1} data2 ${value.data2} data3 ${value.data3}",
         GetTestCase_ASONF3(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASON3 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASON3 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACON3 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACON3 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASON3(value.nodeNumber, value.deviceNumber, value.data1, value.data2, value.data3);
@@ -1636,11 +1636,11 @@ describe('mergAdminNode tests', function(){
     //
 	itParam("ASOF3 test nodeNumber ${value.nodeNumber} deviceNumber ${value.deviceNumber} data1 ${value.data1} data2 ${value.data2} data3 ${value.data3}",
         GetTestCase_ASONF3(), function (done, value) {
-            winston.info({message: 'mergAdminNode test: BEGIN ASOF3 test ' + JSON.stringify(value)});
+            winston.debug({message: 'mergAdminNode test: BEGIN ASOF3 test ' + JSON.stringify(value)});
         node.config.events = []         // clear events
         node.on('events', function tmp(data) {
 			eventData = data;
-			winston.info({message: 'mergAdminNode Test: ACOF3 incoming test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'mergAdminNode Test: ACOF3 incoming test - message data : ' + JSON.stringify(eventData)});
             node.removeListener('events', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputASOF3(value.nodeNumber, value.deviceNumber, value.data1, value.data2, value.data3);
@@ -1659,11 +1659,11 @@ describe('mergAdminNode tests', function(){
     // FC non-existant opcode - FC doesn't exist, so check that doesn't cause any problem, and should emit an 'cbusNoSupport' event
     //
 	it("FC Unsupported Opcode test:  ", function (done) {
-		winston.info({message: 'mergAdminNode test: BEGIN FC Unsupported Opcode test '});
+		winston.debug({message: 'mergAdminNode test: BEGIN FC Unsupported Opcode test '});
         node.cbusNoSupport = {}     // clear no support array first
         node.on('cbusNoSupport', function tmp(data) {
 			cbusNoSupportData = data;
-			winston.info({message: 'mergAdminNode Test: FC Unsupported Opcode test - message data : ' + JSON.stringify(cbusNoSupportData)});
+			winston.debug({message: 'mergAdminNode Test: FC Unsupported Opcode test - message data : ' + JSON.stringify(cbusNoSupportData)});
             node.removeListener('cbusNoSupport', tmp);    // remove event listener after first event
         })
 		mock_Cbus.outputUNSUPOPCODE(0);
@@ -1679,10 +1679,10 @@ describe('mergAdminNode tests', function(){
 
 
 	it('cbusTraffic test', function(done) {
-		winston.info({message: 'mergAdminNode Test: cbusTraffic test'});
+		winston.debug({message: 'mergAdminNode Test: cbusTraffic test'});
         node.on('cbusTraffic', function tmp(data) {
             trafficData = data
-            winston.info({message: 'mergAdminNode Test: cbusTraffic test - message data : ' + JSON.stringify(trafficData)});
+            winston.debug({message: 'mergAdminNode Test: cbusTraffic test - message data : ' + JSON.stringify(trafficData)});
             node.removeListener('cbusTraffic', tmp);    // remove event listener after first event
         })
         var message = cbusLib.encodeACK()

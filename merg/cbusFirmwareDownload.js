@@ -64,7 +64,7 @@ function decodeLine(FIRMWARE, line, callback) {
         // the above code assumes each 'line' fits into a 16 byte chunk, arranged on a 16 byte boundary
         // so check if a line straddles a 16 byte boundary, and error if so
         if ( (OFFSET % 16) + RECLEN > 16) {
-            winston.debug({message: 'CBUS Download: line decode: Data Record: *************************** ERROR - straddles boundary'});
+            winston.info({message: 'CBUS Download: line decode: Data Record: *************************** ERROR - straddles boundary'});
         }
        
       if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
@@ -87,7 +87,7 @@ function decodeLine(FIRMWARE, line, callback) {
             }
         }        
         if(callback) {callback(FIRMWARE);}
-        else {winston.debug({message: 'CBUS Download: line decode: WARNING - No EOF callback'})}
+        else {winston.info({message: 'CBUS Download: line decode: WARNING - No EOF callback'})}
     }
 
     if ( RECTYP == 2) {
@@ -142,10 +142,10 @@ function readHexFile(FILENAME, CALLBACK) {
   
     readInterface.on('line', function(line) {
         decodeLine(firmware, line, function (firmwareObject) {
-            winston.info({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
+            winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
             for (const area in firmwareObject) {
                 for (const block in firmwareObject[area]) {
-                    winston.info({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
+                    winston.debug({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
                 }
             }  
             if(CALLBACK) {CALLBACK(firmwareObject)}
@@ -163,7 +163,7 @@ function readFirmware() {
 function download (FILENAME, NET_ADDRESS, NET_PORT) {
   
         readHexFile(FILENAME, function (firmwareObject) {
-            winston.info({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
+            winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
         })
       
         let client = new net.Socket()

@@ -228,7 +228,7 @@ class cbusAdmin extends EventEmitter {
                     this.config.nodes[cbusMsg.nodeNumber].EvCount = cbusMsg.eventCount
                     this.saveConfig()
                 }
-        		winston.info({message: 'mergAdminNode: NUMEV: ' + JSON.stringify(this.config.nodes[cbusMsg.nodeNumber])});
+        		winston.debug({message: 'mergAdminNode: NUMEV: ' + JSON.stringify(this.config.nodes[cbusMsg.nodeNumber])});
             },
 
             '90': (cbusMsg) => {//Accessory On Long Event

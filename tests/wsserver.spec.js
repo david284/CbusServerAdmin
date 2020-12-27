@@ -60,14 +60,14 @@ describe('Websocket server tests', function(){
 	
     
 	before(function(done) {
-		winston.info({message: ' '});
-		winston.info({message: '======================================================================'});
-		winston.info({message: '----------------------------- wsserver tests -------------------------'});
-		winston.info({message: '======================================================================'});
-		winston.info({message: ' '});
+		winston.debug({message: ' '});
+		winston.debug({message: '======================================================================'});
+		winston.debug({message: '----------------------------- wsserver tests -------------------------'});
+		winston.debug({message: '======================================================================'});
+		winston.debug({message: ' '});
 
 		http_Server = http.createServer(() => console.log(" -/- "));
-		http_Server.listen(7575, () => { winston.info({message: "wsserver listening on 7575"}); });
+		http_Server.listen(7575, () => { winston.debug({message: "wsserver listening on 7575"}); });
 	
 		websocket_Server(directory, http_Server, cbusAdmin);
 
@@ -78,12 +78,12 @@ describe('Websocket server tests', function(){
         });
 		
         websocket_Client.on('connect', function() {
-			winston.info({message: 'wwserver client connected...'});
+			winston.debug({message: 'wwserver client connected...'});
             done();
         });
 		
         websocket_Client.on('disconnect', function() {
-			winston.info({message: 'wwserver client disconnected...'});
+			winston.debug({message: 'wwserver client disconnected...'});
         });
 		
 
@@ -91,7 +91,7 @@ describe('Websocket server tests', function(){
 
     
     beforeEach(function() {
-   		winston.info({message: ' '});   // blank line to separate tests
+   		winston.debug({message: ' '});   // blank line to separate tests
         mock_Cbus.clearSendArray()
     })
     
@@ -99,11 +99,11 @@ describe('Websocket server tests', function(){
 	after(function() {
 		if (websocket_Client.connected)
 		{
-			winston.info({message: 'Close wwserver test Client'});
+			winston.debug({message: 'Close wwserver test Client'});
 			websocket_Client.close();
 		}
 		if(http_Server) {
-			winston.info({message: 'Close http server'});
+			winston.debug({message: 'Close http server'});
 			http_Server.close(() => { console.log('CLOSING WSServer'); http_Server.unref(); done(); });
 		}
 		
@@ -149,7 +149,7 @@ describe('Websocket server tests', function(){
 
 
 	itParam("ACCESSORY_LONG_OFF test nodeId ${value.nodeId} event ${value.eventId}", GetTestCase_ACCESSORY_LONG(), function (done, value) {
-		winston.info({message: 'wsserver Test: START ACCESSORY_LONG_OFF test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START ACCESSORY_LONG_OFF test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('ACCESSORY_LONG_OFF', {"nodeId": value.nodeId, "eventId": value.eventId})
 		setTimeout(function(){
@@ -161,7 +161,7 @@ describe('Websocket server tests', function(){
 
 		
 	itParam("ACCESSORY_LONG_ON test nodeId ${value.nodeId} event ${value.eventId}", GetTestCase_ACCESSORY_LONG(), function (done, value) {
-		winston.info({message: 'wsserver Test: START ACCESSORY_LONG_ON test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START ACCESSORY_LONG_ON test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('ACCESSORY_LONG_ON', {"nodeId": value.nodeId, "eventId": value.eventId})
 		setTimeout(function(){
@@ -192,7 +192,7 @@ describe('Websocket server tests', function(){
 
 
 	itParam("ACCESSORY_SHORT_OFF test nodeId ${value.nodeId} deviceNumber ${value.deviceNumber}", GetTestCase_ACCESSORY_SHORT(), function (done, value) {
-		winston.info({message: 'wsserver Test: START ACCESSORY_SHORT_OFF test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START ACCESSORY_SHORT_OFF test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('ACCESSORY_SHORT_OFF', {"nodeId": value.nodeId, "deviceNumber": value.deviceNumber})
 		setTimeout(function(){
@@ -204,7 +204,7 @@ describe('Websocket server tests', function(){
 
 
 	itParam("ACCESSORY_SHORT_ON test nodeId ${value.nodeId} deviceNumber ${value.deviceNumber}", GetTestCase_ACCESSORY_SHORT(), function (done, value) {
-		winston.info({message: 'wsserver Test: START ACCESSORY_SHORT_ON test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START ACCESSORY_SHORT_ON test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('ACCESSORY_SHORT_ON', {"nodeId": value.nodeId, "deviceNumber": value.deviceNumber})
 		setTimeout(function(){
@@ -254,7 +254,7 @@ describe('Websocket server tests', function(){
 
 	itParam("UPDATE_EVENT_VARIABLE test nodeId ${value.nodeId} eventIndex ${value.eventIndex} eventName ${value.eventName}, eventVariableId ${value.eventVariableId}, eventVariableValue ${value.eventVariableValue}",
 		GetTestCase_UPDATE_EVENT_VARIABLE(), function (done, value) {
-		winston.info({message: 'wsserver Test: START UPDATE_EVENT_VARIABLE test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START UPDATE_EVENT_VARIABLE test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('UPDATE_EVENT_VARIABLE', {
                 "nodeId": value.nodeId,
@@ -303,7 +303,7 @@ describe('Websocket server tests', function(){
 
 	itParam("REMOVE_EVENT test nodeId ${value.nodeId} eventName ${value.eventName}",
 		GetTestCase_REMOVE_EVENT(), function (done, value) {
-		winston.info({message: 'wsserver Test: START REMOVE_EVENT test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START REMOVE_EVENT test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		
 		websocket_Client.emit('REMOVE_EVENT', {
@@ -327,7 +327,7 @@ describe('Websocket server tests', function(){
 
 
 	itParam("REQUEST_ALL_NODE_EVENTS test nodeId ${value.node}", TestCases_NodeId, function (done, value) {
-		winston.info({message: 'wsserver Test: REQUEST_ALL_NODE_EVENTS test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: REQUEST_ALL_NODE_EVENTS test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('REQUEST_ALL_NODE_EVENTS', {"nodeId": value.node})
 		setTimeout(function(){
@@ -358,7 +358,7 @@ describe('Websocket server tests', function(){
 	
 
 	itParam("REQUEST_NODE_VARIABLE test nodeId ${value.node} variableId ${value.variableId}", GetTestCase_REQUEST_NODE_VARIABLE(), function (done, value) {
-		winston.info({message: 'wsserver Test: START REQUEST_NODE_VARIABLE test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START REQUEST_NODE_VARIABLE test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('REQUEST_NODE_VARIABLE', {"nodeId": value.node, "variableId": value.variableId});
 		setTimeout(function(){
@@ -396,7 +396,7 @@ describe('Websocket server tests', function(){
 
 
 	itParam("UPDATE_NODE_VARIABLE_IN_LEARN_MODE test nodeId ${value.nodeId} variableId ${value.variableId} variableValue ${value.variableValue}", GetTestCase_NVSET_learn(), function (done, value) {
-		winston.info({message: 'wsserver Test: START UPDATE_NODE_VARIABLE_IN_LEARN_MODE test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START UPDATE_NODE_VARIABLE_IN_LEARN_MODE test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('UPDATE_NODE_VARIABLE_IN_LEARN_MODE', {"nodeId": value.nodeId, "variableId": value.variableId, "variableValue": value.variableValue})
 		setTimeout(function(){
@@ -443,7 +443,7 @@ describe('Websocket server tests', function(){
 	
 
 	itParam("REQUEST_ALL_EVENT_VARIABLES test nodeId ${value.nodeId} eventIndex ${value.eventIndex} eventVariableCount ${value.eventVariableCount}", GetTestCase_REQUEST_ALL_EVENT_VARIABLES(), function (done, value) {
-		winston.info({message: 'wsserver Test: START REQUEST_ALL_EVENT_VARIABLES test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START REQUEST_ALL_EVENT_VARIABLES test: ' + JSON.stringify(value)});
 		let timeoutDelay = 1;
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('REQUEST_ALL_EVENT_VARIABLES', {
@@ -485,7 +485,7 @@ describe('Websocket server tests', function(){
 	
 
 	itParam("REQUEST_ALL_NODE_PARAMETERS test nodeId ${value.nodeId} parameterCount ${value.parameterCount}", GetTestCase_REQUEST_ALL_NODE_PARAMETERS(), function (done, value) {
-		winston.info({message: 'wsserver Test: START REQUEST_ALL_NODE_PARAMETERS test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START REQUEST_ALL_NODE_PARAMETERS test: ' + JSON.stringify(value)});
 		let timeoutDelay = 5;
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('REQUEST_ALL_NODE_PARAMETERS', {
@@ -527,7 +527,7 @@ describe('Websocket server tests', function(){
 	
 
 	itParam("REQUEST_ALL_NODE_VARIABLES test nodeId ${value.nodeId} variableCount ${value.variableCount}", GetTestCase_REQUEST_ALL_NODE_VARIABLES(), function (done, value) {
-		winston.info({message: 'wsserver Test: START REQUEST_ALL_NODE_VARIABLES test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START REQUEST_ALL_NODE_VARIABLES test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		var timeoutDelay = 1;
 		websocket_Client.emit('REQUEST_ALL_NODE_VARIABLES', {"nodeId": value.nodeId, "variables": value.variableCount, "delay": timeoutDelay})
@@ -562,7 +562,7 @@ describe('Websocket server tests', function(){
 	
 
 	itParam("RQNPN test nodeId ${value.nodeId} param ${value.parameterId}", GetTestCase_RQNPN(), function (done, value) {
-		winston.info({message: 'wsserver Test: RQNPN test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: RQNPN test: ' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('RQNPN', {"nodeId": value.nodeId, "parameter": value.parameterId})
 		setTimeout(function(){
@@ -574,7 +574,7 @@ describe('Websocket server tests', function(){
 		
 
 	it('QUERY_ALL_NODES test', function(done) {
-		winston.info({message: 'wsserver Test: QUERY_ALL_NODES test'});
+		winston.debug({message: 'wsserver Test: QUERY_ALL_NODES test'});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('QUERY_ALL_NODES', '');
 		setTimeout(function(){
@@ -617,7 +617,7 @@ describe('Websocket server tests', function(){
 
 	itParam("TEACH_EVENT test nodeId ${value.nodeId} eventName ${value.eventName}, eventId ${value.eventId}, eventVal ${value.eventVal}",
 		GetTestCase_TEACH_EVENT(), function (done, value) {
-		winston.info({message: 'wsserver Test: START TEACH_EVENT test:' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START TEACH_EVENT test:' + JSON.stringify(value)});
 		mock_Cbus.clearSendArray();
 		websocket_Client.emit('TEACH_EVENT', {
                 "nodeId": value.nodeId,
@@ -670,7 +670,7 @@ describe('Websocket server tests', function(){
 
 
 	it('REQUEST_VERSION test', function(done) {
-		winston.info({message: 'wsserver Test: START REQUEST_VERSION test'});
+		winston.debug({message: 'wsserver Test: START REQUEST_VERSION test'});
 		mock_Cbus.clearSendArray();
 			let testCase = {
 				'major': '1',
@@ -679,7 +679,7 @@ describe('Websocket server tests', function(){
 				}
 		websocket_Client.on('VERSION', function (data) {
 			versionData = data;
-			winston.info({message: 'wsserver Test: REQUEST_VERSION test : ' + JSON.stringify(versionData)});
+			winston.debug({message: 'wsserver Test: REQUEST_VERSION test : ' + JSON.stringify(versionData)});
 			});	
 		websocket_Client.emit('REQUEST_VERSION')
 		setTimeout(function(){
@@ -767,7 +767,7 @@ describe('Websocket server tests', function(){
 
 	itParam("cbusError test nodeId ${value.nodeId} errorId ${value.errorId}, message ${value.message}",
 		cbusError_TestCase(), function (done, value) {
-		winston.info({message: 'wsserver Test: START cbusError test: ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START cbusError test: ' + JSON.stringify(value)});
 		
 			var cbusErrors = {};
 			nodeId=0;
@@ -786,7 +786,7 @@ describe('Websocket server tests', function(){
 		cbusAdmin.clearCbusErrors();
 		websocket_Client.on('cbusError', function (data) {
 			cbusErrorData = data;
-			winston.info({message: 'wsserver Test: cbusError test - data : ' + JSON.stringify(cbusErrorData)});
+			winston.debug({message: 'wsserver Test: cbusError test - data : ' + JSON.stringify(cbusErrorData)});
 			});	
 		mock_Cbus.outputCMDERR(value.nodeId, value.errorId);
 		setTimeout(function(){
@@ -798,7 +798,7 @@ describe('Websocket server tests', function(){
 
 
 	it('cbusNoSupport test', function(done) {
-		winston.info({message: 'wsserver Test: START cbusNoSupport test:'});
+		winston.debug({message: 'wsserver Test: START cbusNoSupport test:'});
 		
 			var cbusNoSupport = {}
 			let ref = "FC"
@@ -810,7 +810,7 @@ describe('Websocket server tests', function(){
 		
 		websocket_Client.on('cbusNoSupport', function (data) {
 			cbusNoSupportData = data;
-			winston.info({message: 'wsserver Test: cbusNoSupport test - data : ' + JSON.stringify(cbusNoSupportData)});
+			winston.debug({message: 'wsserver Test: cbusNoSupport test - data : ' + JSON.stringify(cbusNoSupportData)});
 			});	
 		mock_Cbus.outputUNSUPOPCODE(1);
 		setTimeout(function(){
@@ -872,7 +872,7 @@ describe('Websocket server tests', function(){
 	}
 
 	itParam('dccError test data1 ${value.data1}, data2 ${value.data2}, errorId ${value.errorId}, message ${value.message}',	dccError_TestCase(), function (done, value) {
-		winston.info({message: 'wsserver Test: START dccError test ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START dccError test ' + JSON.stringify(value)});
 		let testCase = {
 			'type': "DCC",
 			'Error': value.errorId,
@@ -881,7 +881,7 @@ describe('Websocket server tests', function(){
 			}
 		websocket_Client.on('dccError', function (data) {
 			dccErrorData = data;
-			winston.info({message: 'wsserver Test: dccError test - data : ' + JSON.stringify(dccErrorData)});
+			winston.debug({message: 'wsserver Test: dccError test - data : ' + JSON.stringify(dccErrorData)});
 			});	
 		mock_Cbus.outputERR(value.data1, value.data2, value.errorId);
 		setTimeout(function(){
@@ -932,10 +932,10 @@ describe('Websocket server tests', function(){
 
 
 	itParam('dccSessions test session ${value.session} fn1 ${value.fn1} fn2 ${value.fn2}', dccSessions_TestCase(), function(done, value) {
-		winston.info({message: 'wsserver Test: START dccSessions test ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START dccSessions test ' + JSON.stringify(value)});
 		websocket_Client.on('dccSessions', function (data) {
 			dccSessionsData = data;
-			winston.info({message: 'wsserver Test: dccSessions test - message data : ' + JSON.stringify(dccSessionsData)});
+			winston.debug({message: 'wsserver Test: dccSessions test - message data : ' + JSON.stringify(dccSessionsData)});
 			});	
 		mock_Cbus.outputDFUN(value.session, value.fn1, value.fn2)
 		setTimeout(function(){
@@ -969,11 +969,11 @@ describe('Websocket server tests', function(){
 	}
 
 	itParam('events test nodeId ${value.nodeId} eventId ${value.eventId} status ${value.status}', events_TestCase(), function(done, value) {
-		winston.info({message: 'wsserver Test: START events test  ' + JSON.stringify(value)});
+		winston.debug({message: 'wsserver Test: START events test  ' + JSON.stringify(value)});
 		websocket_Client.emit('CLEAR_NODE_EVENTS', {"nodeId": value.nodeId});
 		websocket_Client.on('events', function (data) {
 			eventData = data;
-			winston.info({message: 'wsserver Test: events test - message data : ' + JSON.stringify(eventData)});
+			winston.debug({message: 'wsserver Test: events test - message data : ' + JSON.stringify(eventData)});
 			});	
 		if (value.status == 'on') mock_Cbus.outputACON(value.nodeId, value.eventId);
 		if (value.status == 'off') mock_Cbus.outputACOF(value.nodeId, value.eventId);
@@ -991,10 +991,10 @@ describe('Websocket server tests', function(){
 
 
 	it('node test', function(done) {
-		winston.info({message: 'wsserver: node test'});
+		winston.debug({message: 'wsserver: node test'});
 		websocket_Client.on('nodes', function (data) {
 			nodeData = data;
-			winston.info({message: 'wsserver: START node test - message data : ' + JSON.stringify(nodeData)});
+			winston.debug({message: 'wsserver: START node test - message data : ' + JSON.stringify(nodeData)});
 			});	
 		mock_Cbus.outputPNN(0);
 		setTimeout(function(){
@@ -1006,11 +1006,11 @@ describe('Websocket server tests', function(){
 
 
 	it('requestNodeNumber test', function(done) {
-		winston.info({message: 'wsserver: requestNodeNumber test'});
+		winston.debug({message: 'wsserver: requestNodeNumber test'});
 		mock_Cbus.clearSendArray();
 		websocket_Client.on('layoutDetails', function (data) {
 			nodeData = data;
-			winston.info({message: 'wsserver: START requestNodeNumber test - message data : ' + JSON.stringify(nodeData)});
+			winston.debug({message: 'wsserver: START requestNodeNumber test - message data : ' + JSON.stringify(nodeData)});
 			});	
 		mock_Cbus.outputRQNN(0);
 		setTimeout(function(){
