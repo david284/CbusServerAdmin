@@ -675,9 +675,9 @@ describe('Websocket server tests', function(){
 			let testCase = {
 				'major': '1',
 				'minor': '0',
-				'patch': '13',
+				'patch': '14',
 				}
-		websocket_Client.on('VERSION', function (data) {
+		websocket_Client.once('VERSION', function (data) {
 			versionData = data;
 			winston.debug({message: 'wsserver Test: REQUEST_VERSION test : ' + JSON.stringify(versionData)});
 			});	
@@ -808,7 +808,7 @@ describe('Websocket server tests', function(){
             output['count'] = 1
             cbusNoSupport[ref] = output
 		
-		websocket_Client.on('cbusNoSupport', function (data) {
+		websocket_Client.once('cbusNoSupport', function (data) {
 			cbusNoSupportData = data;
 			winston.debug({message: 'wsserver Test: cbusNoSupport test - data : ' + JSON.stringify(cbusNoSupportData)});
 			});	
@@ -879,7 +879,7 @@ describe('Websocket server tests', function(){
 			'Message': value.message,
 			'data': decToHex(value.data1,2) + decToHex(value.data2,2)
 			}
-		websocket_Client.on('dccError', function (data) {
+		websocket_Client.once('dccError', function (data) {
 			dccErrorData = data;
 			winston.debug({message: 'wsserver Test: dccError test - data : ' + JSON.stringify(dccErrorData)});
 			});	
@@ -933,7 +933,7 @@ describe('Websocket server tests', function(){
 
 	itParam('dccSessions test session ${value.session} fn1 ${value.fn1} fn2 ${value.fn2}', dccSessions_TestCase(), function(done, value) {
 		winston.debug({message: 'wsserver Test: START dccSessions test ' + JSON.stringify(value)});
-		websocket_Client.on('dccSessions', function (data) {
+		websocket_Client.once('dccSessions', function (data) {
 			dccSessionsData = data;
 			winston.debug({message: 'wsserver Test: dccSessions test - message data : ' + JSON.stringify(dccSessionsData)});
 			});	
@@ -971,7 +971,7 @@ describe('Websocket server tests', function(){
 	itParam('events test nodeId ${value.nodeId} eventId ${value.eventId} status ${value.status}', events_TestCase(), function(done, value) {
 		winston.debug({message: 'wsserver Test: START events test  ' + JSON.stringify(value)});
 		websocket_Client.emit('CLEAR_NODE_EVENTS', {"nodeId": value.nodeId});
-		websocket_Client.on('events', function (data) {
+		websocket_Client.once('events', function (data) {
 			eventData = data;
 			winston.debug({message: 'wsserver Test: events test - message data : ' + JSON.stringify(eventData)});
 			});	
@@ -992,7 +992,7 @@ describe('Websocket server tests', function(){
 
 	it('node test', function(done) {
 		winston.debug({message: 'wsserver: node test'});
-		websocket_Client.on('nodes', function (data) {
+		websocket_Client.once('nodes', function (data) {
 			nodeData = data;
 			winston.debug({message: 'wsserver: START node test - message data : ' + JSON.stringify(nodeData)});
 			});	
@@ -1008,7 +1008,7 @@ describe('Websocket server tests', function(){
 	it('requestNodeNumber test', function(done) {
 		winston.debug({message: 'wsserver: requestNodeNumber test'});
 		mock_Cbus.clearSendArray();
-		websocket_Client.on('layoutDetails', function (data) {
+		websocket_Client.once('layoutDetails', function (data) {
 			nodeData = data;
 			winston.debug({message: 'wsserver: START requestNodeNumber test - message data : ' + JSON.stringify(nodeData)});
 			});	
