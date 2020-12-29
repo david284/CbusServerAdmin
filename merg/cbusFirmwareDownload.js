@@ -133,7 +133,7 @@ function readHexFile(FILENAME, CALLBACK) {
     try {
       var intelHexString = fs.readFileSync(FILENAME);
     } catch (error) {
-        winston.info({message: 'CBUS Download: File read: ' + error});
+        winston.debug({message: 'CBUS Download: File read: ' + error});
         throw('CBUS Download: File read: ' + error)
     }
     

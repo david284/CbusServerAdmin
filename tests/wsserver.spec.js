@@ -817,7 +817,6 @@ describe('Websocket server tests', function(){
 		mock_Cbus.outputUNSUPOPCODE(1);
 		setTimeout(function(){
 			expect(JSON.stringify(cbusNoSupportData)).to.equal(JSON.stringify(cbusNoSupport));
-			websocket_Client.off('cbusNoSupport');
 			done();
 			}, 10);
 	});
@@ -888,7 +887,6 @@ describe('Websocket server tests', function(){
 		mock_Cbus.outputERR(value.data1, value.data2, value.errorId);
 		setTimeout(function(){
 			expect(JSON.stringify(dccErrorData)).to.equal(JSON.stringify(testCase));
-			websocket_Client.off('dccError');
 			done();
 			}, 10);
 	});
@@ -943,7 +941,6 @@ describe('Websocket server tests', function(){
 		setTimeout(function(){
 			// check expected fn2
 			expect(dccSessionsData[value.session]['F' + value.fn1]).to.equal(value.fn2);
-			websocket_Client.off('dccSessions');
 			done();
 			}, 10);
 	});
@@ -986,7 +983,6 @@ describe('Websocket server tests', function(){
 				if (item.nodeId == value.nodeId && item.eventId == value.eventId) {status = item.status;}
 			})
 			expect(status).to.equal(value.status);
-			websocket_Client.off('events');
 			done();
 			}, 20);
 	});
@@ -1001,7 +997,6 @@ describe('Websocket server tests', function(){
 		mock_Cbus.outputPNN(0);
 		setTimeout(function(){
 			expect(nodeData[0].module).to.equal("CANACC8");
-			websocket_Client.off('nodes');
 			done();
 			}, 10);
 	});
@@ -1019,7 +1014,6 @@ describe('Websocket server tests', function(){
 			// check that nextNodeId is +1 from the new nodeId transmitted as a result of the request
 			var newNodeId = parseInt(mock_Cbus.getSendArray()[0].substr(9, 4), 16);
 			expect(nodeData.layoutDetails.nextNodeId).to.equal(newNodeId + 1);
-			websocket_Client.off('nodes');
 			done();
 			}, 50);
 	});

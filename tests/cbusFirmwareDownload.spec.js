@@ -79,7 +79,7 @@ describe('cbusFirmwareDownload tests', function(){
             errorString = error
         }
 		setTimeout(function(){
-            expect(errorString).to.include('CBUS Download: File read: ', 'errorString');
+            expect(errorString).to.include('CBUS Download: File read: Error: ', 'errorString');
 			done();
 		}, 100);
 	});
