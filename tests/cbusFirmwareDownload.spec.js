@@ -26,11 +26,11 @@ describe('cbusFirmwareDownload tests', function(){
   	});
     
     beforeEach(function() {
-   		winston.info({message: ' '});   // blank line to separate tests
+   		winston.debug({message: ' '});   // blank line to separate tests
     })
 
 	after(function(done) {
-   		winston.info({message: ' '});   // blank line to separate tests
+   		winston.debug({message: ' '});   // blank line to separate tests
         setTimeout(() => {
             winston.debug({message: 'TEST: cbusFirmwareDownload: Tests ended'});
             done();
@@ -53,7 +53,7 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 	it('Read Hex File test', function(done) {
-		winston.debug({message: 'TEST; Read Hex File test:'});
+		winston.debug({message: 'TEST: Read Hex File test:'});
         var callbackInvoked = false
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
             function(firmwareObject){ 
@@ -68,13 +68,22 @@ describe('cbusFirmwareDownload tests', function(){
 		}, 500);
 	});
 
-/*
+
 	it('Read Hex missing File test', function(done) {
 		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
-        done();
+        var errorString = ""
+        try {
+            cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
+        } catch (error) {
+            winston.debug({message: 'TEST: File read: ' + error});
+            errorString = error
+        }
+		setTimeout(function(){
+            expect(errorString).to.include('CBUS Download: File read: ', 'errorString');
+			done();
+		}, 100);
 	});
-*/
+
 
 	it('decode line test', function(done) {
 		winston.debug({message: 'TEST: decode line Test:'});

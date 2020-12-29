@@ -783,15 +783,17 @@ describe('Websocket server tests', function(){
 			//this.cbusErrors.push(output)
 			cbusErrors[ref] = output
               
+        var eventCount = 0
 		cbusAdmin.clearCbusErrors();
-		websocket_Client.on('cbusError', function (data) {
+		websocket_Client.on('cbusError', function tmp(data) {
+            eventCount++
 			cbusErrorData = data;
 			winston.debug({message: 'wsserver Test: cbusError test - data : ' + JSON.stringify(cbusErrorData)});
+            if (eventCount > 1) websocket_Client.off('cbusError', tmp);
 			});	
 		mock_Cbus.outputCMDERR(value.nodeId, value.errorId);
 		setTimeout(function(){
 			expect(JSON.stringify(cbusErrorData)).to.equal(JSON.stringify(cbusErrors));
-			websocket_Client.off('cbusError');
 			done();
 			}, 10);
 	});

@@ -45,16 +45,18 @@ function decodeLine(FIRMWARE, line, callback) {
         var b = ((parseInt(decodeLine.extAddressHex, 16) << 16) + OFFSET) >>4
         
         if (a == b) { // same chunk
-//            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk ' + a});
+            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk ' + a});
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex][0] == undefined) {
                 winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk - prep array '});
                 for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
             }
         } else if (a + 1 == b) { // next chunk
+            winston.debug({message: 'CBUS Download: line decode: Data Record: Next chunk ' + a + ' ' + b});
             decodeLine.index += 16
             for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
         } else { // must be new array then
+            winston.debug({message: 'CBUS Download: line decode: Data Record: New array ' + a + ' ' + b});
             decodeLine.startAddressHex = decodeLine.extAddressHex + decToHex(OFFSET & 0xFFE0, 4)
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             decodeLine.index = 0
@@ -130,10 +132,9 @@ function readHexFile(FILENAME, CALLBACK) {
     
     try {
       var intelHexString = fs.readFileSync(FILENAME);
-    } catch (err) {
-        // emit file error
-        winston.info({message: 'CBUS Download: File read: ' + err});
-        return;
+    } catch (error) {
+        winston.info({message: 'CBUS Download: File read: ' + error});
+        throw('CBUS Download: File read: ' + error)
     }
     
   const readInterface = readline.createInterface({
@@ -162,9 +163,14 @@ function readFirmware() {
 
 function download (FILENAME, NET_ADDRESS, NET_PORT) {
   
+    try {
         readHexFile(FILENAME, function (firmwareObject) {
             winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
         })
+    } catch (err) {
+        winston.info({message: 'CBUS Download: ***************** download: ' + err});
+        throw('CBUS Download: download ' + err)
+    }
       
         let client = new net.Socket()
         client.connect(NET_PORT, NET_ADDRESS, function () {
