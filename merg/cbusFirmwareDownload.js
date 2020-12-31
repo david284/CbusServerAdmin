@@ -160,40 +160,68 @@ function readFirmware() {
         return firmware
 }
     
+    
+function checkCPUTYPE (nodeCPU, FIRMWARE) {
+    //
+    // parameters start at offset 0x820 in the firmware download
+    // cpu type is a byte value at 0x828
+    //
+    var targetCPU = FIRMWARE['PROGRAM']['00000800'][0x28]
+    winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
+    if (nodeCPU == targetCPU) {return true}
+    else {return false}    
 
-function download (FILENAME, NET_ADDRESS, NET_PORT) {
-  
+}    
+
+function download (parent, CPUTYPE, FILENAME, FLAGS) {
+    winston.info({message: 'CBUS Download: >>>>>>>>>>>>>'})
+ 
     try {
         readHexFile(FILENAME, function (firmwareObject) {
             winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
+            if (checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
+                winston.info({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
+                parent.emit('Download', 'CPU mismatch')
+                return;
+            }
+            
+            let client = new net.Socket()
+            client.connect(parent.net_port, parent.net_address, function () {
+                winston.debug({message: 'CBUS Download: Client Connected ' + parent.net_address + ':' + parent.net_port});
+            })
+            
+            client.on('error', (err) => {
+                winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
+            })
+            
+            client.on('close', function () {
+                winston.debug({message: 'CBUS Download: Connection Closed'});
+            })
+
+            setTimeout(() => {
+                client.destroy();
+                winston.debug({message: 'CBUS Download: Client closed normally'});
+            }, 200)
+            
+            winston.info({message: 'CBUS Download: ***************** download: ENDING'});
+            parent.emit('Download', 'Complete')
+            
         })
     } catch (err) {
         winston.info({message: 'CBUS Download: ***************** download: ' + err});
         throw('CBUS Download: download ' + err)
     }
-      
-        let client = new net.Socket()
-        client.connect(NET_PORT, NET_ADDRESS, function () {
-            winston.debug({message: 'CBUS Download: Client Connected'});
-        })
-        
-        client.on('error', (err) => {
-            winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
-        })
-        
-        client.on('close', function () {
-            winston.debug({message: 'CBUS Download: Connection Closed'});
-        })
 
-        setTimeout(() => {
-            client.destroy();
-            winston.debug({message: 'CBUS Download: Client closed normally'});
-        }, 200)
-    }  
+}  
 
 
 class cbusFirmwareDownload extends EventEmitter  {
-    download (FILENAME, NET_ADDRESS, NET_PORT) {download (FILENAME, NET_ADDRESS, NET_PORT)}
+    constructor(NET_ADDRESS, NET_PORT) {
+        super()
+        this.net_address = NET_ADDRESS
+        this.net_port = NET_PORT
+    }
+    download (CPUTYPE, FILENAME, FLAGS) { download(this, CPUTYPE, FILENAME, FLAGS) }
     readHexFile(fileName, callback) {readHexFile(fileName, callback)}
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
     readFirmware() {return readFirmware()}
@@ -208,4 +236,6 @@ class cbusFirmwareDownload extends EventEmitter  {
 
     }
 
-module.exports = new cbusFirmwareDownload();
+//module.exports = new cbusFirmwareDownload();
+
+module.exports = ( NET_ADDRESS, NET_PORT ) => { return new cbusFirmwareDownload( NET_ADDRESS, NET_PORT ) }

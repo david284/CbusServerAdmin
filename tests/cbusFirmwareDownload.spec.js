@@ -7,10 +7,10 @@ const jsonfile = require('jsonfile')
 const cbusLib = require('cbusLibrary')
 const Mock_Cbus = require('./mock_CbusNetwork.js')
 
-const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')
-
 const NET_PORT = 5552;
 const NET_ADDRESS = "127.0.0.1"
+
+const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
 
 describe('cbusFirmwareDownload tests', function(){
   	let mock_Cbus = new Mock_Cbus.mock_CbusNetwork(NET_PORT);
@@ -99,17 +99,31 @@ describe('cbusFirmwareDownload tests', function(){
 
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.download('./tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
-        done();
+		cbusFirmwareDownload.download(1, './tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
+        cbusFirmwareDownload.once('Download', function (data) {
+			downloadData = data;
+			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
+			});	        
+		setTimeout(function(){
+            expect(downloadData).to.equal('Complete', 'Download event');
+			done();
+		}, 500);
 	});
 
-/*
-	it('Download test2', function(done) {
-		winston.debug({message: 'cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload('./tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
-        done();
+
+	it('Download wrong file test', function(done) {
+		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
+		cbusFirmwareDownload.download(1, './tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
+        cbusFirmwareDownload.once('Download', function (data) {
+			downloadData = data;
+			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
+			});	        
+		setTimeout(function(){
+            expect(downloadData).to.equal('CPU mismatch', 'Download event');
+			done();
+		}, 500);
 	});
-*/
+
 
   
 
