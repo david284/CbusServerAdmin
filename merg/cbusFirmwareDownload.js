@@ -170,49 +170,7 @@ function checkCPUTYPE (nodeCPU, FIRMWARE) {
     winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
     if (nodeCPU == targetCPU) {return true}
     else {return false}    
-
 }    
-
-function download (parent, CPUTYPE, FILENAME, FLAGS) {
-    winston.info({message: 'CBUS Download: >>>>>>>>>>>>>'})
- 
-    try {
-        readHexFile(FILENAME, function (firmwareObject) {
-            winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
-            if (checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
-                winston.info({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
-                parent.emit('Download', 'CPU mismatch')
-                return;
-            }
-            
-            let client = new net.Socket()
-            client.connect(parent.net_port, parent.net_address, function () {
-                winston.debug({message: 'CBUS Download: Client Connected ' + parent.net_address + ':' + parent.net_port});
-            })
-            
-            client.on('error', (err) => {
-                winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
-            })
-            
-            client.on('close', function () {
-                winston.debug({message: 'CBUS Download: Connection Closed'});
-            })
-
-            setTimeout(() => {
-                client.destroy();
-                winston.debug({message: 'CBUS Download: Client closed normally'});
-            }, 200)
-            
-            winston.info({message: 'CBUS Download: ***************** download: ENDING'});
-            parent.emit('Download', 'Complete')
-            
-        })
-    } catch (err) {
-        winston.info({message: 'CBUS Download: ***************** download: ' + err});
-        throw('CBUS Download: download ' + err)
-    }
-
-}  
 
 
 class cbusFirmwareDownload extends EventEmitter  {
@@ -221,11 +179,53 @@ class cbusFirmwareDownload extends EventEmitter  {
         this.net_address = NET_ADDRESS
         this.net_port = NET_PORT
     }
-    download (CPUTYPE, FILENAME, FLAGS) { download(this, CPUTYPE, FILENAME, FLAGS) }
+    
+    //  expose some local functions for testing purposes
     readHexFile(fileName, callback) {readHexFile(fileName, callback)}
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
     readFirmware() {return readFirmware()}
     arrayChecksum(array) {return arrayChecksum(array)}
+
+    // actual download function
+    download (CPUTYPE, FILENAME, FLAGS) {
+        try {
+            readHexFile(FILENAME, function (firmwareObject) {
+                winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
+                if (checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
+                    winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
+                    this.emit('Download', 'CPU mismatch')
+                    return;
+                }
+                
+                let client = new net.Socket()
+                client.connect(this.net_port, this.net_address, function () {
+                    winston.debug({message: 'CBUS Download: Client Connected ' + this.net_address + ':' + this.net_port});
+                }.bind(this))
+                
+                client.on('error', (err) => {
+                    winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
+                })
+                
+                client.on('close', function () {
+                    winston.debug({message: 'CBUS Download: Connection Closed'});
+                })
+
+                setTimeout(() => {
+                    client.destroy();
+                    winston.debug({message: 'CBUS Download: Client closed normally'});
+                }, 200)
+                
+                winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
+                this.emit('Download', 'Complete')
+                
+            }.bind(this))
+        } catch (error) {
+            winston.info({message: 'CBUS Download: ***************** download: ' + err});
+            this.emit('Download', error)
+        }
+    }
+    
+
 };
 
 
