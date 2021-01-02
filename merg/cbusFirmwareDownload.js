@@ -187,7 +187,7 @@ class cbusFirmwareDownload extends EventEmitter  {
     arrayChecksum(array) {return arrayChecksum(array)}
 
     // actual download function
-    download (CPUTYPE, FILENAME, FLAGS) {
+    download (NODENUMBER, CPUTYPE, FILENAME, FLAGS) {
         try {
             readHexFile(FILENAME, function (firmwareObject) {
                 winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
@@ -218,6 +218,14 @@ class cbusFirmwareDownload extends EventEmitter  {
                 winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
                 this.emit('Download', 'Complete')
                 
+                // set boot mode
+                var msg = cbusLib.encodeBOOTM(NODENUMBER)
+                client.write(msg)
+                
+                
+                var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x04, 0, 0)
+                client.write(msg)
+                
             }.bind(this))
         } catch (error) {
             winston.info({message: 'CBUS Download: ***************** download: ' + err});
@@ -228,14 +236,5 @@ class cbusFirmwareDownload extends EventEmitter  {
 
 };
 
-
-    function cbusSend(msg) {
-        this.client.write(msg.toUpperCase());
-//        let outMsg = cbusLib.decode(msg);
-//        this.emit('cbusTraffic', {direction: 'Out', raw: outMsg.encoded, translated: outMsg.text});
-
-    }
-
-//module.exports = new cbusFirmwareDownload();
 
 module.exports = ( NET_ADDRESS, NET_PORT ) => { return new cbusFirmwareDownload( NET_ADDRESS, NET_PORT ) }

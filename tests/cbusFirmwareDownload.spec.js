@@ -99,7 +99,7 @@ describe('cbusFirmwareDownload tests', function(){
 
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.download(1, './tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
@@ -113,7 +113,7 @@ describe('cbusFirmwareDownload tests', function(){
 
 	it('Download wrong file test', function(done) {
 		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.download(1, './tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
