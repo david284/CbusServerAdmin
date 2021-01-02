@@ -1,7 +1,6 @@
 'use strict';
 var winston = require('winston');		// use config from root instance
 const net = require('net');
-const cbusMessage = require('./../merg/mergCbusMessage.js')
 
 const cbusLib = require('cbusLibrary')
 
@@ -50,9 +49,8 @@ class mock_CbusNetwork {
 					msgArray[i] = msgArray[i].concat(";");				// add back the ';' terminator that was lost in the split
 					this.sendArray.push(msgArray[i]);					// store the incoming messages so the test can inspect them
                     var cbusMsg = cbusLib.decode(msgArray[i]);
-					let msg = new cbusMessage.cbusMessage(msgArray[i]);
 					winston.debug({message: 'Mock CBUS Network: [' + i + '] ' +  msgArray[i] + " " + cbusMsg.text});
-					switch (msg.opCode()) {
+					switch (cbusMsg.opCode) {
 					case '0D':
 						// Format: <MjPri><MinPri=3><CANID>]<0D>
 						winston.debug({message: 'Mock CBUS Network: received QNN'});
@@ -67,7 +65,7 @@ class mock_CbusNetwork {
 						break;
 					case '42':
 						// Format: [<MjPri><MinPri=3><CANID>]<42><NNHigh><NNLow>
-						var nodeNumber = msg.nodeId();
+						var nodeNumber = cbusMsg.nodeNumber
 						winston.debug({message: 'Mock CBUS Network: received SNN : new Node Number ' + nodeNumber});
 						// could renumber or create a new module, but not necessary at this time
 						break;
@@ -82,7 +80,7 @@ class mock_CbusNetwork {
 					case '57':
 						// Format: [<MjPri><MinPri=3><CANID>]<57><NN hi><NN lo>
 						winston.debug({message: 'Mock CBUS Network: received NERD'});
-                		var nodeNumber = msg.nodeId()
+                		var nodeNumber = cbusMsg.nodeNumber
                         if ( this.getModule(nodeNumber) != undefined) {
                             var events = this.getModule(nodeNumber).getStoredEvents();
                             //for (var i = 0; i < events.length; i++) {
@@ -98,8 +96,8 @@ class mock_CbusNetwork {
 					case '58':
 						// Format: [<MjPri><MinPri=3><CANID>]<58><NN hi><NN lo>
 						winston.debug({message: 'Mock CBUS Network: received RQEVN'});
-                    	var storedEventsCount = this.getModule(nodeId).getStoredEventsCount();
-						this.outputNUMEV(msg.nodeId(), storedEventsCount);
+                    	var storedEventsCount = this.getModule(cbusMsg.nodeNumber).getStoredEventsCount();
+						this.outputNUMEV(cbusMsg.nodeNumber, storedEventsCount);
 						break;
 					case '71':
 						// Format: [<MjPri><MinPri=3><CANID>]<71><NN hi><NN lo><NV#>
@@ -108,8 +106,8 @@ class mock_CbusNetwork {
 					case '73':
 						// Format: [<MjPri><MinPri=3><CANID>]<73><NN hi><NN lo><Para#>
 						winston.debug({message: 'Mock CBUS Network: received RQNPN'});
-                        var paramValue = this.getModule(msg.nodeId()).getParameter(msg.paramId());
-						this.outputPARAN(msg.nodeId(), msg.paramId(), paramValue);
+                        var paramValue = this.getModule(cbusMsg.nodeNumber).getParameter(cbusMsg.parameterIndex);
+						this.outputPARAN(cbusMsg.nodeNumber, cbusMsg.parameterIndex, paramValue);
 						break;
 					case '90':
 						// Format: [<MjPri><MinPri=3><CANID>]<90><NN hi><NN lo><EN hi><EN lo>
@@ -136,7 +134,7 @@ class mock_CbusNetwork {
 						winston.debug({message: 'Mock CBUS Network: received EVLRN'});
 						break;
 					default:
-						winston.debug({message: 'Mock CBUS Network: ********************** received unknown opcode ' + msg.opCode()});
+						winston.debug({message: 'Mock CBUS Network: ********************** received unknown opcode ' + cbusMsg.opCode});
 						break;
 					}
 				}
