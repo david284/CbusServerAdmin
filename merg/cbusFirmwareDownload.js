@@ -115,18 +115,6 @@ function decodeLine(FIRMWARE, line, callback) {
     }
 }
 
-function arrayChecksum(array) {
-    var checksum = 0;
-    for (var i = 0; i <array.length; i++) {
-        checksum += array[i]
-        checksum = checksum & 0xFFFF        // trim to 16 bits
-    }
-    var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
-    winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
-    return checksum2C
-}
-
-
 function readHexFile(FILENAME, CALLBACK) {
     var firmware = {}
     
@@ -178,13 +166,13 @@ class cbusFirmwareDownload extends EventEmitter  {
         super()
         this.net_address = NET_ADDRESS
         this.net_port = NET_PORT
+        this.FIRMWARE = {}
     }
     
     //  expose some local functions for testing purposes
     readHexFile(fileName, callback) {readHexFile(fileName, callback)}
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
     readFirmware() {return readFirmware()}
-    arrayChecksum(array) {return arrayChecksum(array)}
 
     // actual download function
     download (NODENUMBER, CPUTYPE, FILENAME, FLAGS) {
@@ -196,6 +184,8 @@ class cbusFirmwareDownload extends EventEmitter  {
                     this.emit('Download', 'CPU mismatch')
                     return;
                 }
+                
+                this.FIRMWARE = firmwareObject
                 
                 let client = new net.Socket()
                 client.connect(this.net_port, this.net_address, function () {
@@ -210,21 +200,36 @@ class cbusFirmwareDownload extends EventEmitter  {
                     winston.debug({message: 'CBUS Download: Connection Closed'});
                 })
 
-                setTimeout(() => {
-                    client.destroy();
-                    winston.debug({message: 'CBUS Download: Client closed normally'});
-                }, 200)
-                
-                winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
-                this.emit('Download', 'Complete')
-                
+                client.on('data', function (message) {
+                    var cbusMsg = cbusLib.decode(message.toString())
+                    winston.debug({message: 'CBUS Download: message In: ' + cbusMsg.text});
+                    if (cbusMsg.operation == 'RESPONSE') {
+                        if (cbusMsg.response == 2) {
+                            winston.debug({message: 'CBUS Download: OK RESPONSE received:'});
+                            this.sendFirmware()
+                        }
+                    }
+                }.bind(this))
+
                 // set boot mode
                 var msg = cbusLib.encodeBOOTM(NODENUMBER)
                 client.write(msg)
                 
+                // need to allow a small time for module to go into boot mode
+                setTimeout(() => {
+                    var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x04, 0, 0)
+                    client.write(msg)
+                }, 200)
                 
-                var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x04, 0, 0)
-                client.write(msg)
+                // ok, need to check if it's completed after a reasonable time, if not must have failed
+                setTimeout(() => {
+                    client.destroy();
+                    winston.debug({message: 'CBUS Download: Client closed normally'});
+
+                    winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
+                    this.emit('Download', 'Complete')
+                
+                }, 2000)
                 
             }.bind(this))
         } catch (error) {
@@ -233,6 +238,35 @@ class cbusFirmwareDownload extends EventEmitter  {
         }
     }
     
+    sendFirmware() {
+        winston.debug({message: 'CBUS Download: Started sending firmware'});
+        var program = this.FIRMWARE['PROGRAM']['00000800']
+        var expectedChecksum = this.arrayChecksum('0000', program)
+        var calculatedChecksum;
+        winston.debug({message: 'CBUS Download: firmware length ' + program.length});
+        for (let i = 0; i < program.length; i += 8) {
+            var chunk = program.slice(i, i + 8)
+            var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
+            calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
+            winston.debug({message: 'CBUS Download: sending firmware: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
+        }
+    }
+    
+
+    arrayChecksum(array, start) {
+        var checksum = 0;
+        if ( start != undefined) {
+            checksum = (parseInt(start, 16) ^ 0xFFFF) + 1;
+        }
+        for (var i = 0; i <array.length; i++) {
+            checksum += array[i]
+            checksum = checksum & 0xFFFF        // trim to 16 bits
+        }
+        var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
+        winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
+        return checksum2C
+    }
+
 
 };
 
