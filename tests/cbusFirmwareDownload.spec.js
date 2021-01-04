@@ -108,7 +108,7 @@ describe('cbusFirmwareDownload tests', function(){
 		setTimeout(function(){
             expect(downloadData).to.equal('Complete', 'Download event');
 			done();
-		}, 5000);
+		}, 10000);
 	});
 
 

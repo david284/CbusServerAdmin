@@ -166,6 +166,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         super()
         this.net_address = NET_ADDRESS
         this.net_port = NET_PORT
+        this.client = new net.Socket()
         this.FIRMWARE = {}
     }
     
@@ -187,25 +188,30 @@ class cbusFirmwareDownload extends EventEmitter  {
                 
                 this.FIRMWARE = firmwareObject
                 
-                let client = new net.Socket()
-                client.connect(this.net_port, this.net_address, function () {
+                this.client.connect(this.net_port, this.net_address, function () {
                     winston.debug({message: 'CBUS Download: Client Connected ' + this.net_address + ':' + this.net_port});
                 }.bind(this))
                 
-                client.on('error', (err) => {
+                this.client.on('error', (err) => {
                     winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
                 })
                 
-                client.on('close', function () {
+                this.client.on('close', function () {
                     winston.debug({message: 'CBUS Download: Connection Closed'});
                 })
 
-                client.on('data', function (message) {
+                this.client.on('data', function (message) {
                     var cbusMsg = cbusLib.decode(message.toString())
                     winston.debug({message: 'CBUS Download: message In: ' + cbusMsg.text});
                     if (cbusMsg.operation == 'RESPONSE') {
+                        if (cbusMsg.response == 1) {
+                            winston.debug({message: 'CBUS Download: Check OK received: Sending reset'});
+                            var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x01, 0, 0)
+                            this.client.write(msg)
+                            this.emit('Download', 'Complete')
+                        }
                         if (cbusMsg.response == 2) {
-                            winston.debug({message: 'CBUS Download: OK RESPONSE received:'});
+                            winston.debug({message: 'CBUS Download: BOOT MODE Confirmed received:'});
                             this.sendFirmware()
                         }
                     }
@@ -213,23 +219,22 @@ class cbusFirmwareDownload extends EventEmitter  {
 
                 // set boot mode
                 var msg = cbusLib.encodeBOOTM(NODENUMBER)
-                client.write(msg)
+                this.client.write(msg)
                 
                 // need to allow a small time for module to go into boot mode
                 setTimeout(() => {
                     var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x04, 0, 0)
-                    client.write(msg)
+                    this.client.write(msg)
                 }, 200)
                 
                 // ok, need to check if it's completed after a reasonable time, if not must have failed
                 setTimeout(() => {
-                    client.destroy();
+                    this.client.destroy();
                     winston.debug({message: 'CBUS Download: Client closed normally'});
 
                     winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
-                    this.emit('Download', 'Complete')
-                
-                }, 2000)
+                    this.emit('Download', 'Failed: Timeout')                
+                }, 8000)
                 
             }.bind(this))
         } catch (error) {
@@ -245,11 +250,20 @@ class cbusFirmwareDownload extends EventEmitter  {
         var calculatedChecksum;
         winston.debug({message: 'CBUS Download: firmware length ' + program.length});
         for (let i = 0; i < program.length; i += 8) {
-            var chunk = program.slice(i, i + 8)
-            var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
-            calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-            winston.debug({message: 'CBUS Download: sending firmware: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
+            setTimeout(() => {
+                var chunk = program.slice(i, i + 8)
+                var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
+                calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
+                winston.debug({message: 'CBUS Download: sending firmware: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
+            }, i)
         }
+        setTimeout(() => {
+            // Verify Checksum
+            // 00049272: Send: :X00080004N000000000D034122;
+            winston.debug({message: 'CBUS Download: Sending Check firmware'});
+            var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x03, parseInt(calculatedChecksum.substr(2,2), 16), parseInt(calculatedChecksum.substr(0,2),16))
+            this.client.write(msg)
+        }, program.length+1)
     }
     
 
@@ -263,7 +277,7 @@ class cbusFirmwareDownload extends EventEmitter  {
             checksum = checksum & 0xFFFF        // trim to 16 bits
         }
         var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
-        winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
+//        winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
         return checksum2C
     }
 
