@@ -8,9 +8,15 @@ let cbusLib = require('cbuslibrary')
 const EventEmitter = require('events').EventEmitter;
 
 
+//
+//
+//
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
 
+//
+//
+//
 function decodeLine(FIRMWARE, line, callback) {
     var MARK = line.substr(0,1)
     var RECLEN = parseInt(line.substr(1,2), 16)
@@ -115,52 +121,10 @@ function decodeLine(FIRMWARE, line, callback) {
     }
 }
 
-function readHexFile(FILENAME, CALLBACK) {
-    var firmware = {}
-    
-    try {
-      var intelHexString = fs.readFileSync(FILENAME);
-    } catch (error) {
-        winston.debug({message: 'CBUS Download: File read: ' + error});
-        throw('CBUS Download: File read: ' + error)
-    }
-    
-  const readInterface = readline.createInterface({
-    input: fs.createReadStream(FILENAME),
-    });
-  
-    readInterface.on('line', function(line) {
-        decodeLine(firmware, line, function (firmwareObject) {
-            winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
-            for (const area in firmwareObject) {
-                for (const block in firmwareObject[area]) {
-                    winston.debug({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
-                }
-            }  
-            if(CALLBACK) {CALLBACK(firmwareObject)}
-            else {winston.info({message: 'CBUS Download: read hex file: WARNING - No EOF callback'})}
-        })
-    });  
-}
 
-
-function readFirmware() {
-        return firmware
-}
-    
-    
-function checkCPUTYPE (nodeCPU, FIRMWARE) {
-    //
-    // parameters start at offset 0x820 in the firmware download
-    // cpu type is a byte value at 0x828
-    //
-    var targetCPU = FIRMWARE['PROGRAM']['00000800'][0x28]
-    winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
-    if (nodeCPU == targetCPU) {return true}
-    else {return false}    
-}    
-
-
+//
+//
+//
 class cbusFirmwareDownload extends EventEmitter  {
     constructor(NET_ADDRESS, NET_PORT) {
         super()
@@ -170,17 +134,18 @@ class cbusFirmwareDownload extends EventEmitter  {
         this.FIRMWARE = {}
     }
     
-    //  expose some local functions for testing purposes
-    readHexFile(fileName, callback) {readHexFile(fileName, callback)}
+    //  expose decodeLine for testing purposes
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
-    readFirmware() {return readFirmware()}
+
 
     // actual download function
+    //
+    //
     download (NODENUMBER, CPUTYPE, FILENAME, FLAGS) {
         try {
-            readHexFile(FILENAME, function (firmwareObject) {
+            this.readHexFile(FILENAME, function (firmwareObject) {
                 winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
-                if (checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
+                if (this.checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
                     winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
                     this.emit('Download', 'CPU mismatch')
                     return;
@@ -243,6 +208,10 @@ class cbusFirmwareDownload extends EventEmitter  {
         }
     }
     
+
+    //
+    //
+    //
     sendFirmware() {
         winston.debug({message: 'CBUS Download: Started sending firmware'});
         var program = this.FIRMWARE['PROGRAM']['00000800']
@@ -267,6 +236,9 @@ class cbusFirmwareDownload extends EventEmitter  {
     }
     
 
+    //
+    //
+    //
     arrayChecksum(array, start) {
         var checksum = 0;
         if ( start != undefined) {
@@ -277,10 +249,55 @@ class cbusFirmwareDownload extends EventEmitter  {
             checksum = checksum & 0xFFFF        // trim to 16 bits
         }
         var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
-//        winston.debug({message: 'CHECKSUM: array length: ' + array.length + ' ' + ' checksum: ' + checksum2C});
         return checksum2C
     }
 
+
+    //
+    //
+    //
+    readHexFile(FILENAME, CALLBACK) {
+        var firmware = {}
+        
+        try {
+          var intelHexString = fs.readFileSync(FILENAME);
+        } catch (error) {
+            winston.debug({message: 'CBUS Download: File read: ' + error});
+            throw('CBUS Download: File read: ' + error)
+        }
+        
+      const readInterface = readline.createInterface({
+        input: fs.createReadStream(FILENAME),
+        });
+      
+        readInterface.on('line', function(line) {
+            decodeLine(firmware, line, function (firmwareObject) {
+                winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
+                for (const area in firmwareObject) {
+                    for (const block in firmwareObject[area]) {
+                        winston.debug({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
+                    }
+                }  
+                if(CALLBACK) {CALLBACK(firmwareObject)}
+                else {winston.info({message: 'CBUS Download: read hex file: WARNING - No EOF callback'})}
+            })
+        });  
+    }
+
+
+    //
+    //
+    //
+    checkCPUTYPE (nodeCPU, FIRMWARE) {
+        //
+        // parameters start at offset 0x820 in the firmware download
+        // cpu type is a byte value at 0x828
+        //
+        var targetCPU = FIRMWARE['PROGRAM']['00000800'][0x28]
+        winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
+        if (nodeCPU == targetCPU) {return true}
+        else {return false}    
+    }    
 
 };
 

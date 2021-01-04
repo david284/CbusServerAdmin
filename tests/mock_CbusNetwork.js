@@ -84,24 +84,24 @@ class mock_CbusNetwork {
         if (cbusMsg.type == 'CONTROL') {
             switch (cbusMsg.SPCMD) {
                 case 0:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message CMD_NOP <<< '});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_NOP <<< '});
                     break;
                 case 1:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message CMD_RESET  <<< '});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_RESET  <<< '});
                     break;
                 case 2:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message CMD_RST_CHKSM <<< '});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_RST_CHKSM <<< '});
                     break;
                 case 3:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message CMD_CHK_RUN <<< '});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_CHK_RUN <<< '});
                     this.outputExtResponse(1)   // 1 = ok ( 0 = not ok)
                     break;
                 case 4:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message CMD_BOOT_TEST <<< '});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_BOOT_TEST <<< '});
                     this.outputExtResponse(2)   // 2 = confirm boot load
                     break;
                 default:
-                    winston.info({message: 'Mock CBUS Network: <<< Received control message UNKNOWN COMMAND ' + cbusMsg.text});
+                    winston.debug({message: 'Mock CBUS Network: <<< Received control message UNKNOWN COMMAND ' + cbusMsg.text});
                     break
             }
         }
