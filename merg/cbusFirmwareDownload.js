@@ -130,7 +130,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         super()
         this.net_address = NET_ADDRESS
         this.net_port = NET_PORT
-        this.client = new net.Socket()
+        this.client = null
         this.FIRMWARE = {}
     }
     
@@ -138,20 +138,32 @@ class cbusFirmwareDownload extends EventEmitter  {
     decodeLine(array, line, callback) { decodeLine(array, line, callback)}
 
 
-    // actual download function
-    //
-    //
+    /** actual download function
+    * @param NODENUMBER
+    * @param CPUTYPE
+    * @param FILENAME
+    * @param FLAGS
+    * 1 = Program EEPROM
+    * 2 = Program CONFIG
+    * 4 = Ignore CPUTYPE
+    */
     download (NODENUMBER, CPUTYPE, FILENAME, FLAGS) {
         try {
             this.readHexFile(FILENAME, function (firmwareObject) {
                 winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
-                if (this.checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
-                    winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
-                    this.emit('Download', 'CPU mismatch')
-                    return;
+                if (FLAGS & 0x4) {
+                        this.emit('Download', 'CPUTYPE ignored')
+                } else {
+                    if (this.checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
+                        winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
+                        this.emit('Download', 'CPU mismatch')
+                        return;
+                    }
                 }
                 
                 this.FIRMWARE = firmwareObject
+                
+                this.client = new net.Socket()
                 
                 this.client.connect(this.net_port, this.net_address, function () {
                     winston.debug({message: 'CBUS Download: Client Connected ' + this.net_address + ':' + this.net_port});
@@ -203,8 +215,8 @@ class cbusFirmwareDownload extends EventEmitter  {
                 
             }.bind(this))
         } catch (error) {
-            winston.info({message: 'CBUS Download: ***************** download: ' + err});
-            this.emit('Download', error)
+            winston.debug({message: 'CBUS Download: ERROR: ' + error});
+            this.emit('Download', 'ERROR: ' + error)
         }
     }
     
@@ -262,8 +274,8 @@ class cbusFirmwareDownload extends EventEmitter  {
         try {
           var intelHexString = fs.readFileSync(FILENAME);
         } catch (error) {
-            winston.debug({message: 'CBUS Download: File read: ' + error});
-            throw('CBUS Download: File read: ' + error)
+            winston.debug({message: 'CBUS Download: File read error: ' + error});
+            throw('File read error: ' + error)
         }
         
       const readInterface = readline.createInterface({

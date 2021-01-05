@@ -26,7 +26,7 @@ describe('cbusFirmwareDownload tests', function(){
   	});
     
     beforeEach(function() {
-   		winston.debug({message: ' '});   // blank line to separate tests
+   		winston.debug({message: '  '});   // blank line to separate tests
     })
 
 	after(function(done) {
@@ -43,7 +43,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 
 	it('Checksum test', function(done) {
-		winston.debug({message: 'TEST: Checksum test:'});
+		winston.debug({message: 'TEST: Checksum:'});
         // expect to get two's compliment of 16 bit checksum returned
         var array = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
         // checksum of above is 06F9, so two's complement is F907
@@ -71,7 +71,7 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 	it('Read Hex missing File test', function(done) {
-		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
+		winston.debug({message: 'TEST: read missing file:'});
         var errorString = ""
         try {
             cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
@@ -80,14 +80,14 @@ describe('cbusFirmwareDownload tests', function(){
             errorString = error
         }
 		setTimeout(function(){
-            expect(errorString).to.include('CBUS Download: File read: Error: ', 'errorString');
+            expect(errorString).to.include('File read error: Error: ', 'errorString');
 			done();
 		}, 100);
 	});
 
 
 	it('decode line test', function(done) {
-		winston.debug({message: 'TEST: decode line Test:'});
+		winston.debug({message: 'TEST: decode line:'});
         var callbackInvoked = false
         var firmware = {}
 		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ callbackInvoked = true;});
@@ -99,12 +99,12 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 	it('Download full test', function(done) {
-		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', NET_ADDRESS, NET_PORT);
+		winston.debug({message: 'TEST: full download:'});
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
-			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
+			winston.debug({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 0);
 		setTimeout(function(){
             expect(downloadData).to.equal('Complete', 'Download event');
 			done();
@@ -113,14 +113,42 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 	it('Download wrong file test', function(done) {
-		winston.debug({message: 'TEST: cbusFirmwareDownload Test:'});
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANMIO3aBETA3-18F26K80-16MHz.HEX', NET_ADDRESS, NET_PORT);
+		winston.debug({message: 'TEST: wrong file:'});
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
-			winston.debug({message: 'wsserver Test: Download: ' + JSON.stringify(downloadData)});
+			winston.debug({message: 'TEST: wrong file: ' + JSON.stringify(downloadData)});
 			});	        
+		cbusFirmwareDownload.download(300, 0, './tests/test_firmware/paramsOnly.HEX', 0);
 		setTimeout(function(){
             expect(downloadData).to.equal('CPU mismatch', 'Download event');
+			done();
+		}, 500);
+	});
+
+
+	it('Download ignore CPUTYPE test', function(done) {
+		winston.debug({message: 'TEST: ignore CPUTYPE:'});
+        cbusFirmwareDownload.once('Download', function (data) {
+			downloadData = data;
+			winston.debug({message: 'TEST: ignore CPUTYPE: ' + JSON.stringify(downloadData)});
+			});	        
+		cbusFirmwareDownload.download(300, 99, './tests/test_firmware/paramsOnly.HEX', 4);
+		setTimeout(function(){
+            expect(downloadData).to.equal('CPUTYPE ignored', 'Download event');
+			done();
+		}, 500);
+	});
+
+
+	it('Download file not found test', function(done) {
+		winston.debug({message: 'TEST: file not found:'});
+        cbusFirmwareDownload.once('Download', function (data) {
+			downloadData = data;
+			winston.debug({message: 'TEST: file not found: ' + JSON.stringify(downloadData)});
+			});	        
+		cbusFirmwareDownload.download(300, 1, './FNF.hex', 4);
+		setTimeout(function(){
+            expect(downloadData).to.include('File read error: Error: ', 'errorString');
 			done();
 		}, 500);
 	});
