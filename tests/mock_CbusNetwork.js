@@ -5,23 +5,20 @@ const net = require('net');
 const cbusLib = require('cbusLibrary')
 
 //
+//  *************** mock cbus network ********************
+//  Only supports the functionality necessary to enable testing
+//  It is not intended to fully simulate the actions of real modules
+//
 //		Grid connect CAN over serial message syntax
 //     : <S | X> <IDENTIFIER> <N> <DATA-0> <DATA-1> … <DATA-7> ;
 //
 //	
 
-function pad(num, len) { //add zero's to ensure hex values have correct number of characters
-    var padded = "00000000" + num;
-    return padded.substr(-len);
-}
 
-
-function decToHex(num, len) {
-    let output = Number(num).toString(16).toUpperCase()
-    var padded = "00000000" + output
-    //return (num + Math.pow(16, len)).toString(16).slice(-len).toUpperCase()
-    return padded.substr(-len)
-}
+//
+//
+//
+function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
 
 class mock_CbusNetwork {
