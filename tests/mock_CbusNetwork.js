@@ -30,6 +30,8 @@ class mock_CbusNetwork {
 		this.sendArray = [];
 		this.socket;
 		
+        this.firmware = []
+        
 		this.modules = 	[
 						new CANACC8 (0),
 						new CANSERVO8C (1),
@@ -96,11 +98,16 @@ class mock_CbusNetwork {
                 case 4:
                     winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_BOOT_TEST <<< '});
                     this.outputExtResponse(2)   // 2 = confirm boot load
+                    this.firmware = []
                     break;
                 default:
                     winston.debug({message: 'Mock CBUS Network: <<< Received control message UNKNOWN COMMAND ' + cbusMsg.text});
                     break
             }
+        }
+        if (cbusMsg.type == 'DATA') {
+            for (var i = 0; i < 8; i++) {this.firmware.push(cbusMsg.data[i])}
+            winston.debug({message: 'Mock CBUS Network: <<< Received DATA - new length ' + this.firmware.length});
         }
     }
 

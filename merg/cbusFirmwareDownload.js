@@ -234,6 +234,7 @@ class cbusFirmwareDownload extends EventEmitter  {
             setTimeout(() => {
                 var chunk = program.slice(i, i + 8)
                 var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
+                this.client.write(msgData)
                 calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
                 winston.debug({message: 'CBUS Download: sending firmware: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
             }, i)
@@ -242,8 +243,8 @@ class cbusFirmwareDownload extends EventEmitter  {
             // Verify Checksum
             // 00049272: Send: :X00080004N000000000D034122;
             winston.debug({message: 'CBUS Download: Sending Check firmware'});
-            var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x03, parseInt(calculatedChecksum.substr(2,2), 16), parseInt(calculatedChecksum.substr(0,2),16))
-            this.client.write(msg)
+            var msgData = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x03, parseInt(calculatedChecksum.substr(2,2), 16), parseInt(calculatedChecksum.substr(0,2),16))
+            this.client.write(msgData)
         }, program.length+1)
     }
     

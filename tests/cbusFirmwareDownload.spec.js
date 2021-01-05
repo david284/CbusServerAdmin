@@ -107,6 +107,7 @@ describe('cbusFirmwareDownload tests', function(){
 		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 0);
 		setTimeout(function(){
             expect(downloadData).to.equal('Complete', 'Download event');
+            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('2241', 'Checksum');
 			done();
 		}, 10000);
 	});
