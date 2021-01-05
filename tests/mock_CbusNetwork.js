@@ -166,6 +166,10 @@ class mock_CbusNetwork {
                 var storedEventsCount = this.getModule(cbusMsg.nodeNumber).getStoredEventsCount();
                 this.outputNUMEV(cbusMsg.nodeNumber, storedEventsCount);
                 break;
+            case '5C':
+                // Format: [<MjPri><MinPri=3><CANID>]<5C><NN hi><NN lo>>
+                winston.debug({message: 'Mock CBUS Network: received BOOTM: node ' + cbusMsg.nodeNumber });
+                break;
             case '71':
                 // Format: [<MjPri><MinPri=3><CANID>]<71><NN hi><NN lo><NV#>
                 winston.debug({message: 'Mock CBUS Network: received NVRD'});
