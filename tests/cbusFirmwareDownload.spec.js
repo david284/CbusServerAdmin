@@ -114,6 +114,10 @@ describe('cbusFirmwareDownload tests', function(){
     // test sequence of operations on download
     // use shortened file to save time, as we've already tested parsing full hex file above
     //
+    // expect: sequence to start with sending of BOOTM opcode
+    // expect: next, Hex file loaded, parsed & downloaded - verify by testing checksum of downloaded file if 'Complete' event received
+    // expect: Last thing, expect reset command sent
+    //
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: full download:'});
         cbusFirmwareDownload.once('Download', function (data) {
@@ -122,14 +126,23 @@ describe('cbusFirmwareDownload tests', function(){
 			});	        
 		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/paramsOnly.HEX', 0);
 		setTimeout(function(){
+            //
+            // expect first message to be BOOTM
+            var firstMsg = cbusLib.decode(mock_Cbus.sendArray[0])
+			winston.debug({message: 'TEST: full download: first message: ' + firstMsg.text});
+            expect(firstMsg.ID_TYPE).to.equal('S', 'first message ID_TYPE');
+            expect(firstMsg.opCode).to.equal('5C', 'first message BOOTM 5C');
+            //
+            // verify checksum when process is signalled as complete
             expect(downloadData).to.equal('Complete', 'Download event');
             expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('ECCA', 'Checksum');
+            //
             // check last message is a reset command
             var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
+			winston.debug({message: 'TEST: full download: last message: ' + lastMsg.text});
             expect(lastMsg.ID_TYPE).to.equal('X', 'last message ID_TYPE');
             expect(lastMsg.type).to.equal('CONTROL', 'last message control type');
             expect(lastMsg.SPCMD).to.equal(1, 'last message reset command');
-			winston.debug({message: 'TEST: full download: last message: ' + lastMsg.text});
 			done();
 		}, 1000);
 	});
