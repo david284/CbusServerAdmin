@@ -21,6 +21,25 @@ const cbusLib = require('cbusLibrary')
 function decToHex(num, len) {return parseInt(num).toString(16).toUpperCase().padStart(len, '0');}
 
 
+//
+//
+//
+function  arrayChecksum(array, start) {
+    var checksum = 0;
+    if ( start != undefined) {
+        checksum = (parseInt(start, 16) ^ 0xFFFF) + 1;
+    }
+    for (var i = 0; i <array.length; i++) {
+        checksum += array[i]
+        checksum = checksum & 0xFFFF        // trim to 16 bits
+    }
+    var checksum2C = decToHex((checksum ^ 0xFFFF) + 1, 4)    // checksum as two's complement in hexadecimal
+    return checksum2C
+}
+
+
+
+
 class mock_CbusNetwork {
 
     constructor(NET_PORT) {
@@ -93,7 +112,13 @@ class mock_CbusNetwork {
                     break;
                 case 3:
                     winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_CHK_RUN <<< '});
-                    this.outputExtResponse(1)   // 1 = ok ( 0 = not ok)
+                    var cksm = arrayChecksum(this.firmware)
+                    winston.debug({message: 'Mock CBUS Network: CMD_CHK_RUN: calculated checksum: ' + cksm + ' received checksum: ' + decToHex(cbusMsg.CPDTH, 2) + decToHex(cbusMsg.CPDTL, 2)});
+                    if (cksm == decToHex(cbusMsg.CPDTH, 2) + decToHex(cbusMsg.CPDTL, 2)) {
+                        this.outputExtResponse(1)   // 1 = ok
+                    } else {
+                        this.outputExtResponse(0)   // 0 = not ok
+                    }
                     break;
                 case 4:
                     winston.debug({message: 'Mock CBUS Network: <<< Received control message CMD_BOOT_TEST <<< '});
@@ -107,7 +132,7 @@ class mock_CbusNetwork {
         }
         if (cbusMsg.type == 'DATA') {
             for (var i = 0; i < 8; i++) {this.firmware.push(cbusMsg.data[i])}
-            winston.debug({message: 'Mock CBUS Network: <<< Received DATA - new length ' + this.firmware.length});
+//            winston.debug({message: 'Mock CBUS Network: <<< Received DATA - new length ' + this.firmware.length});
         }
     }
 

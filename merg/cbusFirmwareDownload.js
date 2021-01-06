@@ -180,6 +180,10 @@ class cbusFirmwareDownload extends EventEmitter  {
                 this.client.on('data', function (message) {
                     var cbusMsg = cbusLib.decode(message.toString())
                     winston.debug({message: 'CBUS Download: message In: ' + cbusMsg.text});
+                        if (cbusMsg.response == 0) {
+                            winston.debug({message: 'CBUS Download: Check NOT OK received: download failed'});
+                            this.emit('Download', 'Failed')
+                        }
                     if (cbusMsg.operation == 'RESPONSE') {
                         if (cbusMsg.response == 1) {
                             winston.debug({message: 'CBUS Download: Check OK received: Sending reset'});
@@ -205,13 +209,14 @@ class cbusFirmwareDownload extends EventEmitter  {
                 }, 200)
                 
                 // ok, need to check if it's completed after a reasonable time, if not must have failed
+                // allow 20 seconds
                 setTimeout(() => {
                     this.client.destroy();
                     winston.debug({message: 'CBUS Download: Client closed normally'});
 
                     winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
                     this.emit('Download', 'Failed: Timeout')                
-                }, 8000)
+                }, 20000)
                 
             }.bind(this))
         } catch (error) {

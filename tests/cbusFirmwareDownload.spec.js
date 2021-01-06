@@ -40,8 +40,11 @@ describe('cbusFirmwareDownload tests', function(){
 	//
     // Start of actual tests................
     // 
-    //
 
+
+    //
+    //
+    //
 	it('Checksum test', function(done) {
 		winston.debug({message: 'TEST: Checksum:'});
         // expect to get two's compliment of 16 bit checksum returned
@@ -52,6 +55,10 @@ describe('cbusFirmwareDownload tests', function(){
         done();
 	});
 
+
+    //
+    // Use real hex file to ensure correct operation
+    //
 	it('Read Hex File test', function(done) {
 		winston.debug({message: 'TEST: Read Hex File test:'});
         var callbackInvoked = false
@@ -70,6 +77,9 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 
+    //
+    //
+    //
 	it('Read Hex missing File test', function(done) {
 		winston.debug({message: 'TEST: read missing file:'});
         var errorString = ""
@@ -86,6 +96,9 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 
+    //
+    // test callback works on decode line function
+    //
 	it('decode line test', function(done) {
 		winston.debug({message: 'TEST: decode line:'});
         var callbackInvoked = false
@@ -97,22 +110,34 @@ describe('cbusFirmwareDownload tests', function(){
 
 
 
-
+    //
+    // test sequence of operations on download
+    // use shortened file to save time, as we've already tested parsing full hex file above
+    //
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: full download:'});
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 0);
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/paramsOnly.HEX', 0);
 		setTimeout(function(){
             expect(downloadData).to.equal('Complete', 'Download event');
-            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('2241', 'Checksum');
+            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('ECCA', 'Checksum');
+            // check last message is a reset command
+            var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
+            expect(lastMsg.ID_TYPE).to.equal('X', 'last message ID_TYPE');
+            expect(lastMsg.type).to.equal('CONTROL', 'last message control type');
+            expect(lastMsg.SPCMD).to.equal(1, 'last message reset command');
+			winston.debug({message: 'TEST: full download: last message: ' + lastMsg.text});
 			done();
-		}, 10000);
+		}, 1000);
 	});
 
 
+    //
+    // use wrong cpu type, and short file
+    //
 	it('Download wrong file test', function(done) {
 		winston.debug({message: 'TEST: wrong file:'});
         cbusFirmwareDownload.once('Download', function (data) {
@@ -127,6 +152,9 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 
+    //
+    // use wrong cpu type, and short file
+    //
 	it('Download ignore CPUTYPE test', function(done) {
 		winston.debug({message: 'TEST: ignore CPUTYPE:'});
         cbusFirmwareDownload.once('Download', function (data) {
@@ -141,6 +169,9 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 
+    //
+    // use non-existent file
+    //
 	it('Download file not found test', function(done) {
 		winston.debug({message: 'TEST: file not found:'});
         cbusFirmwareDownload.once('Download', function (data) {
