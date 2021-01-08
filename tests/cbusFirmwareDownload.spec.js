@@ -124,7 +124,7 @@ describe('cbusFirmwareDownload tests', function(){
 			downloadData = data;
 			winston.debug({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/paramsOnly.HEX', 0);
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/shortFile.HEX', 3);
 		setTimeout(function(){
             //
             // expect first message to be BOOTM
@@ -135,7 +135,7 @@ describe('cbusFirmwareDownload tests', function(){
             //
             // verify checksum when process is signalled as complete
             expect(downloadData).to.equal('Complete', 'Download event');
-            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('ECCA', 'Checksum');
+            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
             //
             // check last message is a reset command
             var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
@@ -144,7 +144,7 @@ describe('cbusFirmwareDownload tests', function(){
             expect(lastMsg.type).to.equal('CONTROL', 'last message control type');
             expect(lastMsg.SPCMD).to.equal(1, 'last message reset command');
 			done();
-		}, 1000);
+		}, 2000);
 	});
 
 
