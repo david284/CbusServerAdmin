@@ -148,6 +148,7 @@ class cbusFirmwareDownload extends EventEmitter  {
     * 4 = Ignore CPUTYPE
     */
     download (NODENUMBER, CPUTYPE, FILENAME, FLAGS) {
+        this.success = false
         try {
             this.readHexFile(FILENAME, function (firmwareObject) {
                 winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
@@ -190,6 +191,10 @@ class cbusFirmwareDownload extends EventEmitter  {
                             var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x01, 0, 0)
                             this.client.write(msg)
                             this.emit('Download', 'Complete')
+                            // ok, can shutdown the connection now
+                            this.client.end();
+                            winston.debug({message: 'CBUS Download: Client closed normally'});
+                            this.success = true
                         }
                         if (cbusMsg.response == 2) {
                             winston.debug({message: 'CBUS Download: BOOT MODE Confirmed received:'});
@@ -209,14 +214,11 @@ class cbusFirmwareDownload extends EventEmitter  {
                 }, 200)
                 
                 // ok, need to check if it's completed after a reasonable time, if not must have failed
-                // allow 20 seconds
+                // allow 10 seconds
                 setTimeout(() => {
-                    this.client.destroy();
-                    winston.debug({message: 'CBUS Download: Client closed normally'});
-
-                    winston.debug({message: 'CBUS Download: ***************** download: ENDING'});
-                    this.emit('Download', 'Failed: Timeout')                
-                }, 20000)
+                    winston.debug({message: 'CBUS Download: ***************** download: ENDING - success is ' + this.success});
+                    if (this.success == false) { this.emit('Download', 'Failed: Timeout') }               
+                }, 10000)
                 
             }.bind(this))
         } catch (error) {
@@ -237,58 +239,74 @@ class cbusFirmwareDownload extends EventEmitter  {
         var staggeredTimeout = 0;
         // we need to keep a running checksum of all the data we send, so we can include it in the check message at the end
         var calculatedChecksum;
+        // we want to indicate progress for each region, so we keep a counter that we can reset and then incrmeent for each region
+        var progressCount = 0
         
         // always do PROGRAM area, but only starting from 00000800
         var program = this.FIRMWARE['PROGRAM']['00000800']
         winston.debug({message: 'CBUS Download: PROGRAM : 00000800 length: ' + program.length});
         var msg = cbusLib.encode_EXT_PUT_CONTROL('000800', 0x0D, 0x02, 0, 0)
         this.client.write(msg)
+        
         for (let i = 0; i < program.length; i += 8) {
-            setTimeout(() => {
+            setTimeout((program) => {
                 var chunk = program.slice(i, i + 8)
                 var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                 this.client.write(msgData)
                 calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                winston.debug({message: 'CBUS Download: sending PROGRAM data: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
-            }, staggeredTimeout += i)
+                winston.debug({message: 'CBUS Download: sending PROGRAM data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                if (progressCount <= i) {
+                    progressCount += 128    // report every 16 messages
+                    var text = 'Progress: PROGRAM ' + Math.round(i/program.length * 100) + '%'
+                    this.emit('Download', text )
+                }
+            }, staggeredTimeout += 1, program)
         }
         
         if (FLAGS & 0x1) {      // Program CONFIG area
             for (const block in this.FIRMWARE['CONFIG']) {
-                winston.debug({message: 'CBUS Download: CONFIG : ' + block + ' length: ' + this.FIRMWARE['CONFIG'][block].length});
+                var config = this.FIRMWARE['CONFIG'][block]
+                winston.debug({message: 'CBUS Download: CONFIG : ' + block + ' length: ' + config.length});
                 setTimeout(() => {
                     var msgData = cbusLib.encode_EXT_PUT_CONTROL(block.substr(2), 0x0D, 0x00, 0, 0)
                     winston.debug({message: 'CBUS Download: sending CONFIG address: ' + msgData});
                     this.client.write(msgData)
                 }, staggeredTimeout += 8)
-                for (let i = 0; i < this.FIRMWARE['CONFIG'][block].length; i += 8) {
-                    setTimeout(() => {
-                        var chunk = this.FIRMWARE['CONFIG'][block].slice(i, i + 8)
+                for (let i = 0; i < config.length; i += 8) {
+                    setTimeout((config) => {
+                        var chunk = config.slice(i, i + 8)
                         var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                         this.client.write(msgData)
                         calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                        winston.debug({message: 'CBUS Download: sending CONFIG data: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
-                    }, staggeredTimeout += i)
+                        winston.debug({message: 'CBUS Download: sending CONFIG data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                        // report progress on every message
+                        var text = 'Progress: CONFIG ' + Math.round(i/config.length * 100) + '%'
+                        this.emit('Download', text )
+                    }, staggeredTimeout += i, config)
                 }
             }
         }
         
         if (FLAGS & 0x2) {      // Program EEPROM area
             for (const block in this.FIRMWARE['EEPROM']) {
-                winston.debug({message: 'CBUS Download: EEPROM : ' + block + ' length: ' + this.FIRMWARE['EEPROM'][block].length});
+                var eeprom = this.FIRMWARE['EEPROM'][block]
+                winston.debug({message: 'CBUS Download: EEPROM : ' + block + ' length: ' + eeprom.length});
                 setTimeout(() => {
                     var msgData = cbusLib.encode_EXT_PUT_CONTROL(block.substr(2), 0x0D, 0x00, 0, 0)
                     winston.debug({message: 'CBUS Download: sending EEPROM address: ' + msgData});
                     this.client.write(msgData)
                 }, staggeredTimeout += 8)
-                for (let i = 0; i < this.FIRMWARE['EEPROM'][block].length; i += 8) {
-                    setTimeout(() => {
-                        var chunk = this.FIRMWARE['EEPROM'][block].slice(i, i + 8)
+                for (let i = 0; i < eeprom.length; i += 8) {
+                    setTimeout((eeprom) => {
+                        var chunk = eeprom.slice(i, i + 8)
                         var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                         this.client.write(msgData)
                         calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                        winston.debug({message: 'CBUS Download: sending EEPROM data: ' + i + ' ' + msgData + ' ' + calculatedChecksum});
-                    }, staggeredTimeout += i)
+                        winston.debug({message: 'CBUS Download: sending EEPROM data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                        // report progress on every message
+                        var text = 'Progress: EEPROM ' + Math.round(i/eeprom.length * 100) + '%  ' +  + i/eeprom.length
+                        this.emit('Download', text )
+                    }, staggeredTimeout += i, eeprom)
                 }
             }
         }
@@ -296,7 +314,6 @@ class cbusFirmwareDownload extends EventEmitter  {
         setTimeout(() => {
             // Verify Checksum
             // 00049272: Send: :X00080004N000000000D034122;
-            winston.debug({message: 'CBUS Download: StaggererTimeout ' + staggeredTimeout});
             winston.debug({message: 'CBUS Download: Sending Check firmware'});
             var msgData = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x03, parseInt(calculatedChecksum.substr(2,2), 16), parseInt(calculatedChecksum.substr(0,2),16))
             this.client.write(msgData)

@@ -10,7 +10,7 @@ const Mock_Cbus = require('./mock_CbusNetwork.js')
 const NET_PORT = 5552;
 const NET_ADDRESS = "127.0.0.1"
 
-const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+//const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
 
 describe('cbusFirmwareDownload tests', function(){
   	let mock_Cbus = new Mock_Cbus.mock_CbusNetwork(NET_PORT);
@@ -47,6 +47,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Checksum test', function(done) {
 		winston.debug({message: 'TEST: Checksum:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         // expect to get two's compliment of 16 bit checksum returned
         var array = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
         // checksum of above is 06F9, so two's complement is F907
@@ -61,6 +62,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Read Hex File test', function(done) {
 		winston.debug({message: 'TEST: Read Hex File test:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         var callbackInvoked = false
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
             function(firmwareObject){ 
@@ -82,6 +84,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Read Hex missing File test', function(done) {
 		winston.debug({message: 'TEST: read missing file:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         var errorString = ""
         try {
             cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
@@ -101,6 +104,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('decode line test', function(done) {
 		winston.debug({message: 'TEST: decode line:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         var callbackInvoked = false
         var firmware = {}
 		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ callbackInvoked = true;});
@@ -120,7 +124,8 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: full download:'});
-        cbusFirmwareDownload.once('Download', function (data) {
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        cbusFirmwareDownload.on('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
@@ -148,11 +153,52 @@ describe('cbusFirmwareDownload tests', function(){
 	});
 
 
+
+    //
+    // test sequence of operations on download
+    // use shortened file to save time, as we've already tested parsing full hex file above
+    //
+    // expect: sequence to start with sending of BOOTM opcode
+    // expect: next, Hex file loaded, parsed & downloaded - verify by testing checksum of downloaded file if 'Complete' event received
+    // expect: Last thing, expect reset command sent
+    //
+	it('Download full2 test', function(done) {
+		winston.debug({message: 'TEST: full download:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        cbusFirmwareDownload.on('Download', function (data) {
+			downloadData = data;
+			winston.info({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
+			});	        
+		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 3);
+		setTimeout(function(){
+            //
+            // expect first message to be BOOTM
+            var firstMsg = cbusLib.decode(mock_Cbus.sendArray[0])
+			winston.debug({message: 'TEST: full download: first message: ' + firstMsg.text});
+            expect(firstMsg.ID_TYPE).to.equal('S', 'first message ID_TYPE');
+            expect(firstMsg.opCode).to.equal('5C', 'first message BOOTM 5C');
+            //
+            // verify checksum when process is signalled as complete
+            expect(downloadData).to.equal('Complete', 'Download event');
+//            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
+            //
+            // check last message is a reset command
+            var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
+			winston.debug({message: 'TEST: full download: last message: ' + lastMsg.text});
+            expect(lastMsg.ID_TYPE).to.equal('X', 'last message ID_TYPE');
+            expect(lastMsg.type).to.equal('CONTROL', 'last message control type');
+            expect(lastMsg.SPCMD).to.equal(1, 'last message reset command');
+			done();
+		}, 11000);
+	});
+
+
     //
     // use wrong cpu type, and short file
     //
 	it('Download wrong file test', function(done) {
 		winston.debug({message: 'TEST: wrong file:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: wrong file: ' + JSON.stringify(downloadData)});
@@ -170,6 +216,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download ignore CPUTYPE test', function(done) {
 		winston.debug({message: 'TEST: ignore CPUTYPE:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: ignore CPUTYPE: ' + JSON.stringify(downloadData)});
@@ -187,6 +234,7 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download file not found test', function(done) {
 		winston.debug({message: 'TEST: file not found:'});
+        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
         cbusFirmwareDownload.once('Download', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: file not found: ' + JSON.stringify(downloadData)});

@@ -6,7 +6,7 @@ const jsonfile = require('jsonfile')
 
 const cbusLib = require('cbusLibrary')
 
-const NET_PORT = 5550;
+const NET_PORT = 5553;
 const NET_ADDRESS = "127.0.0.1"
 const admin = require('./../merg/mergAdminNode.js')
 const file = 'config/nodeConfig.json'
