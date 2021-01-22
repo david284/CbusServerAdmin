@@ -108,7 +108,7 @@ function decodeLine(FIRMWARE, line, callback) {
 
     if ( RECTYP == 4) {
       winston.debug({message: 'CBUS Download: line decode: Extended Linear Address Record: ' + data});
-      if (data == '0000') {decodeLine.area = 'PROGRAM'}
+      if (data == '0000') {decodeLine.area = 'FLASH'}
       if (data == '0030') {decodeLine.area = 'CONFIG'}
       if (data == '00F0') {decodeLine.area = 'EEPROM'}
       decodeLine.extAddressHex = data
@@ -171,7 +171,9 @@ class cbusFirmwareDownload extends EventEmitter  {
                 }.bind(this))
                 
                 this.client.on('error', (err) => {
-                    winston.debug({message: 'CBUS Download: TCP ERROR ${err.code}'});
+                    var msg = 'TCP ERROR: ' + err.code
+                    winston.debug({message: 'CBUS Download: ' + msg});
+                    this.emit('Download', msg)
                 })
                 
                 this.client.on('close', function () {
@@ -242,9 +244,9 @@ class cbusFirmwareDownload extends EventEmitter  {
         // we want to indicate progress for each region, so we keep a counter that we can reset and then incrmeent for each region
         var progressCount = 0
         
-        // always do PROGRAM area, but only starting from 00000800
-        var program = this.FIRMWARE['PROGRAM']['00000800']
-        winston.debug({message: 'CBUS Download: PROGRAM : 00000800 length: ' + program.length});
+        // always do FLASH area, but only starting from 00000800
+        var program = this.FIRMWARE['FLASH']['00000800']
+        winston.debug({message: 'CBUS Download: FLASH : 00000800 length: ' + program.length});
         var msg = cbusLib.encode_EXT_PUT_CONTROL('000800', 0x0D, 0x02, 0, 0)
         this.client.write(msg)
         
@@ -254,10 +256,10 @@ class cbusFirmwareDownload extends EventEmitter  {
                 var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                 this.client.write(msgData)
                 calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                winston.debug({message: 'CBUS Download: sending PROGRAM data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                winston.debug({message: 'CBUS Download: sending FLASH data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
                 if (progressCount <= i) {
                     progressCount += 128    // report every 16 messages
-                    var text = 'Progress: PROGRAM ' + Math.round(i/program.length * 100) + '%'
+                    var text = 'Progress: FLASH ' + Math.round(i/program.length * 100) + '%'
                     this.emit('Download', text )
                 }
             }, staggeredTimeout += 1, program)
@@ -378,7 +380,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         // parameters start at offset 0x820 in the firmware download
         // cpu type is a byte value at 0x828
         //
-        var targetCPU = FIRMWARE['PROGRAM']['00000800'][0x28]
+        var targetCPU = FIRMWARE['FLASH']['00000800'][0x28]
         winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
         if (nodeCPU == targetCPU) {return true}
         else {return false}    

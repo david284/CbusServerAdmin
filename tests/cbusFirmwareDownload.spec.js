@@ -67,8 +67,8 @@ describe('cbusFirmwareDownload tests', function(){
 		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
             function(firmwareObject){ 
                 winston.debug({message: 'TEST: Read Hex File Test: callback invoked: ' + JSON.stringify(firmwareObject)});
-                expect(firmwareObject["PROGRAM"]['00000800'].length).to.equal(6064, 'PROGRAM length'); 
-                expect(cbusFirmwareDownload.arrayChecksum(firmwareObject["PROGRAM"]['00000800'])).to.equal('2241','checksum');
+                expect(firmwareObject["FLASH"]['00000800'].length).to.equal(6064, 'FLASH length'); 
+                expect(cbusFirmwareDownload.arrayChecksum(firmwareObject["FLASH"]['00000800'])).to.equal('2241','checksum');
                 callbackInvoked = true
             }
         );
