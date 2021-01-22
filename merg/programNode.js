@@ -262,7 +262,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                     var text = 'Progress: FLASH ' + Math.round(i/program.length * 100) + '%'
                     this.emit('programNode', text )
                 }
-            }, staggeredTimeout += 1, program)
+            }, staggeredTimeout += 4, program)
         }
         
         if (FLAGS & 0x1) {      // Program CONFIG area
@@ -284,7 +284,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                         // report progress on every message
                         var text = 'Progress: CONFIG ' + Math.round(i/config.length * 100) + '%'
                         this.emit('programNode', text )
-                    }, staggeredTimeout += i, config)
+                    }, staggeredTimeout += 4, config)
                 }
             }
         }
@@ -308,7 +308,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                         // report progress on every message
                         var text = 'Progress: EEPROM ' + Math.round(i/eeprom.length * 100) + '%  ' +  + i/eeprom.length
                         this.emit('programNode', text )
-                    }, staggeredTimeout += i, eeprom)
+                    }, staggeredTimeout += 4, eeprom)
                 }
             }
         }
