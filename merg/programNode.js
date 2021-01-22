@@ -31,7 +31,7 @@ function decodeLine(FIRMWARE, line, callback) {
     if ( typeof decodeLine.extAddressHex == 'undefined' ) { decodeLine.extAddressHex = '0000'; }
     if ( typeof decodeLine.startAddressHex == 'undefined' ) { decodeLine.startAddressHex = '00000000'; }
     
-      winston.debug({message: 'CBUS Download: READ LINE: MARK ' + MARK + 
+      winston.debug({message: 'programNode: READ LINE: MARK ' + MARK + 
       ' RECLEN ' + RECLEN + 
       ' OFFSET ' + OFFSET + 
       ' RECTYP ' + RECTYP + 
@@ -51,18 +51,18 @@ function decodeLine(FIRMWARE, line, callback) {
         var b = ((parseInt(decodeLine.extAddressHex, 16) << 16) + OFFSET) >>4
         
         if (a == b) { // same chunk
-            winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk ' + a});
+            winston.debug({message: 'programNode: line decode: Data Record: Same chunk ' + a});
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex][0] == undefined) {
-                winston.debug({message: 'CBUS Download: line decode: Data Record: Same chunk - prep array '});
+                winston.debug({message: 'programNode: line decode: Data Record: Same chunk - prep array '});
                 for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
             }
         } else if (a + 1 == b) { // next chunk
-            winston.debug({message: 'CBUS Download: line decode: Data Record: Next chunk ' + a + ' ' + b});
+            winston.debug({message: 'programNode: line decode: Data Record: Next chunk ' + a + ' ' + b});
             decodeLine.index += 16
             for (var i = 0; i < 16; i++) { FIRMWARE[decodeLine.area][decodeLine.startAddressHex].push(255)}
         } else { // must be new array then
-            winston.debug({message: 'CBUS Download: line decode: Data Record: New array ' + a + ' ' + b});
+            winston.debug({message: 'programNode: line decode: Data Record: New array ' + a + ' ' + b});
             decodeLine.startAddressHex = decodeLine.extAddressHex + decToHex(OFFSET & 0xFFE0, 4)
             if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
             decodeLine.index = 0
@@ -72,7 +72,7 @@ function decodeLine(FIRMWARE, line, callback) {
         // the above code assumes each 'line' fits into a 16 byte chunk, arranged on a 16 byte boundary
         // so check if a line straddles a 16 byte boundary, and error if so
         if ( (OFFSET % 16) + RECLEN > 16) {
-            winston.info({message: 'CBUS Download: line decode: Data Record: *************************** ERROR - straddles boundary'});
+            winston.info({message: 'programNode: line decode: Data Record: *************************** ERROR - straddles boundary'});
         }
        
       if (FIRMWARE[decodeLine.area][decodeLine.startAddressHex] == undefined) {FIRMWARE[decodeLine.area][decodeLine.startAddressHex] = []}
@@ -84,40 +84,40 @@ function decodeLine(FIRMWARE, line, callback) {
       for (var i = 0; i < 16; i++) { 
         chunkLine.push(decToHex(FIRMWARE[decodeLine.area][decodeLine.startAddressHex][decodeLine.index + i], 2))
       }
-      winston.debug({message: 'CBUS Download: line decode: Chunk Line:  ' + decodeLine.area + ' ' + decodeLine.startAddressHex + ' ' + decToHex(decodeLine.index, 4) + ' ' + chunkLine});
+      winston.debug({message: 'programNode: line decode: Chunk Line:  ' + decodeLine.area + ' ' + decodeLine.startAddressHex + ' ' + decToHex(decodeLine.index, 4) + ' ' + chunkLine});
     }
 
     if ( RECTYP == 1) {
-        winston.debug({message: 'CBUS Download: line decode: End of File Record:'});
+        winston.debug({message: 'programNode: line decode: End of File Record:'});
         for (const area in FIRMWARE) {
             for (const block in FIRMWARE[area]) {
-                winston.debug({message: 'CBUS Download: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
+                winston.debug({message: 'programNode: line decode: FIRMWARE: ' + area + ': ' + block + ' length: ' + FIRMWARE[area][block].length});
             }
         }        
         if(callback) {callback(FIRMWARE);}
-        else {winston.info({message: 'CBUS Download: line decode: WARNING - No EOF callback'})}
+        else {winston.info({message: 'programNode: line decode: WARNING - No EOF callback'})}
     }
 
     if ( RECTYP == 2) {
-      winston.debug({message: 'CBUS Download: line decode: Extended Segment Address Record:'});
+      winston.debug({message: 'programNode: line decode: Extended Segment Address Record:'});
     }
 
     if ( RECTYP == 3) {
-      winston.debug({message: 'CBUS Download: line decode: Start Segment Address Record:'});
+      winston.debug({message: 'programNode: line decode: Start Segment Address Record:'});
     }
 
     if ( RECTYP == 4) {
-      winston.debug({message: 'CBUS Download: line decode: Extended Linear Address Record: ' + data});
+      winston.debug({message: 'programNode: line decode: Extended Linear Address Record: ' + data});
       if (data == '0000') {decodeLine.area = 'FLASH'}
       if (data == '0030') {decodeLine.area = 'CONFIG'}
       if (data == '00F0') {decodeLine.area = 'EEPROM'}
       decodeLine.extAddressHex = data
-      winston.debug({message: 'CBUS Download: ******** NEW MEMORY AREA: ' + decodeLine.area + ' area address ' + data })
+      winston.debug({message: 'programNode: ******** NEW MEMORY AREA: ' + decodeLine.area + ' area address ' + data })
       if (FIRMWARE[decodeLine.area] == undefined) {FIRMWARE[decodeLine.area] = []}
     }
 
     if ( RECTYP == 5) {
-      winston.debug({message: 'CBUS Download: line decode: Start Linear Address Record:'});
+      winston.debug({message: 'programNode: line decode: Start Linear Address Record:'});
     }
 }
 
@@ -151,13 +151,13 @@ class cbusFirmwareDownload extends EventEmitter  {
         this.success = false
         try {
             this.readHexFile(FILENAME, function (firmwareObject) {
-                winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
+                winston.debug({message: 'programNode: >>>>>>>>>>>>> readHexFile callback ' + JSON.stringify(firmwareObject)})
                 if (FLAGS & 0x4) {
-                        this.emit('Download', 'CPUTYPE ignored')
+                        this.emit('programNode', 'CPUTYPE ignored')
                 } else {
                     if (this.checkCPUTYPE (CPUTYPE, firmwareObject) != true) {
-                        winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: FAILED'})
-                        this.emit('Download', 'CPU mismatch')
+                        winston.debug({message: 'programNode: >>>>>>>>>>>>> cpu check: FAILED'})
+                        this.emit('programNode', 'CPU mismatch')
                         return;
                     }
                 }
@@ -167,39 +167,39 @@ class cbusFirmwareDownload extends EventEmitter  {
                 this.client = new net.Socket()
                 
                 this.client.connect(this.net_port, this.net_address, function () {
-                    winston.debug({message: 'CBUS Download: Client Connected ' + this.net_address + ':' + this.net_port});
+                    winston.debug({message: 'programNode: Client Connected ' + this.net_address + ':' + this.net_port});
                 }.bind(this))
                 
                 this.client.on('error', (err) => {
                     var msg = 'TCP ERROR: ' + err.code
-                    winston.debug({message: 'CBUS Download: ' + msg});
-                    this.emit('Download', msg)
+                    winston.debug({message: 'programNode: ' + msg});
+                    this.emit('programNode', msg)
                 })
                 
                 this.client.on('close', function () {
-                    winston.debug({message: 'CBUS Download: Connection Closed'});
+                    winston.debug({message: 'programNode: Connection Closed'});
                 })
 
                 this.client.on('data', function (message) {
                     var cbusMsg = cbusLib.decode(message.toString())
-                    winston.debug({message: 'CBUS Download: message In: ' + cbusMsg.text});
+                    winston.debug({message: 'programNode: message In: ' + cbusMsg.text});
                         if (cbusMsg.response == 0) {
-                            winston.debug({message: 'CBUS Download: Check NOT OK received: download failed'});
-                            this.emit('Download', 'Failed')
+                            winston.debug({message: 'programNode: Check NOT OK received: download failed'});
+                            this.emit('programNode', 'Failed')
                         }
                     if (cbusMsg.operation == 'RESPONSE') {
                         if (cbusMsg.response == 1) {
-                            winston.debug({message: 'CBUS Download: Check OK received: Sending reset'});
+                            winston.debug({message: 'programNode: Check OK received: Sending reset'});
                             var msg = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x01, 0, 0)
                             this.client.write(msg)
-                            this.emit('Download', 'Complete')
+                            this.emit('programNode', 'Complete')
                             // ok, can shutdown the connection now
                             this.client.end();
-                            winston.debug({message: 'CBUS Download: Client closed normally'});
+                            winston.debug({message: 'programNode: Client closed normally'});
                             this.success = true
                         }
                         if (cbusMsg.response == 2) {
-                            winston.debug({message: 'CBUS Download: BOOT MODE Confirmed received:'});
+                            winston.debug({message: 'programNode: BOOT MODE Confirmed received:'});
                             this.sendFirmware(FLAGS)
                         }
                     }
@@ -218,14 +218,14 @@ class cbusFirmwareDownload extends EventEmitter  {
                 // ok, need to check if it's completed after a reasonable time, if not must have failed
                 // allow 10 seconds
                 setTimeout(() => {
-                    winston.debug({message: 'CBUS Download: ***************** download: ENDING - success is ' + this.success});
-                    if (this.success == false) { this.emit('Download', 'Failed: Timeout') }               
+                    winston.debug({message: 'programNode: ***************** download: ENDING - success is ' + this.success});
+                    if (this.success == false) { this.emit('programNode', 'Failed: Timeout') }               
                 }, 10000)
                 
             }.bind(this))
         } catch (error) {
-            winston.debug({message: 'CBUS Download: ERROR: ' + error});
-            this.emit('Download', 'ERROR: ' + error)
+            winston.debug({message: 'programNode: ERROR: ' + error});
+            this.emit('programNode', 'ERROR: ' + error)
         }
     }
     
@@ -234,7 +234,7 @@ class cbusFirmwareDownload extends EventEmitter  {
     //
     //
     sendFirmware(FLAGS) {
-        winston.debug({message: 'CBUS Download: Started sending firmware - FLAGS ' + FLAGS});
+        winston.debug({message: 'programNode: Started sending firmware - FLAGS ' + FLAGS});
         // sending the firmware needs to be done in 8 byte messages
         // and to allow the receiving module to keep up, we use an incrementing 'stagger' value on the timeout
         //
@@ -246,7 +246,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         
         // always do FLASH area, but only starting from 00000800
         var program = this.FIRMWARE['FLASH']['00000800']
-        winston.debug({message: 'CBUS Download: FLASH : 00000800 length: ' + program.length});
+        winston.debug({message: 'programNode: FLASH : 00000800 length: ' + program.length});
         var msg = cbusLib.encode_EXT_PUT_CONTROL('000800', 0x0D, 0x02, 0, 0)
         this.client.write(msg)
         
@@ -256,11 +256,11 @@ class cbusFirmwareDownload extends EventEmitter  {
                 var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                 this.client.write(msgData)
                 calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                winston.debug({message: 'CBUS Download: sending FLASH data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                winston.debug({message: 'programNode: sending FLASH data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
                 if (progressCount <= i) {
                     progressCount += 128    // report every 16 messages
                     var text = 'Progress: FLASH ' + Math.round(i/program.length * 100) + '%'
-                    this.emit('Download', text )
+                    this.emit('programNode', text )
                 }
             }, staggeredTimeout += 1, program)
         }
@@ -268,10 +268,10 @@ class cbusFirmwareDownload extends EventEmitter  {
         if (FLAGS & 0x1) {      // Program CONFIG area
             for (const block in this.FIRMWARE['CONFIG']) {
                 var config = this.FIRMWARE['CONFIG'][block]
-                winston.debug({message: 'CBUS Download: CONFIG : ' + block + ' length: ' + config.length});
+                winston.debug({message: 'programNode: CONFIG : ' + block + ' length: ' + config.length});
                 setTimeout(() => {
                     var msgData = cbusLib.encode_EXT_PUT_CONTROL(block.substr(2), 0x0D, 0x00, 0, 0)
-                    winston.debug({message: 'CBUS Download: sending CONFIG address: ' + msgData});
+                    winston.debug({message: 'programNode: sending CONFIG address: ' + msgData});
                     this.client.write(msgData)
                 }, staggeredTimeout += 8)
                 for (let i = 0; i < config.length; i += 8) {
@@ -280,10 +280,10 @@ class cbusFirmwareDownload extends EventEmitter  {
                         var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                         this.client.write(msgData)
                         calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                        winston.debug({message: 'CBUS Download: sending CONFIG data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                        winston.debug({message: 'programNode: sending CONFIG data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
                         // report progress on every message
                         var text = 'Progress: CONFIG ' + Math.round(i/config.length * 100) + '%'
-                        this.emit('Download', text )
+                        this.emit('programNode', text )
                     }, staggeredTimeout += i, config)
                 }
             }
@@ -292,10 +292,10 @@ class cbusFirmwareDownload extends EventEmitter  {
         if (FLAGS & 0x2) {      // Program EEPROM area
             for (const block in this.FIRMWARE['EEPROM']) {
                 var eeprom = this.FIRMWARE['EEPROM'][block]
-                winston.debug({message: 'CBUS Download: EEPROM : ' + block + ' length: ' + eeprom.length});
+                winston.debug({message: 'programNode: EEPROM : ' + block + ' length: ' + eeprom.length});
                 setTimeout(() => {
                     var msgData = cbusLib.encode_EXT_PUT_CONTROL(block.substr(2), 0x0D, 0x00, 0, 0)
-                    winston.debug({message: 'CBUS Download: sending EEPROM address: ' + msgData});
+                    winston.debug({message: 'programNode: sending EEPROM address: ' + msgData});
                     this.client.write(msgData)
                 }, staggeredTimeout += 8)
                 for (let i = 0; i < eeprom.length; i += 8) {
@@ -304,10 +304,10 @@ class cbusFirmwareDownload extends EventEmitter  {
                         var msgData = cbusLib.encode_EXT_PUT_DATA(chunk)
                         this.client.write(msgData)
                         calculatedChecksum = this.arrayChecksum(chunk, calculatedChecksum)
-                        winston.debug({message: 'CBUS Download: sending EEPROM data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
+                        winston.debug({message: 'programNode: sending EEPROM data: ' + i + ' ' + msgData + ' Rolling CKSM ' + calculatedChecksum});
                         // report progress on every message
                         var text = 'Progress: EEPROM ' + Math.round(i/eeprom.length * 100) + '%  ' +  + i/eeprom.length
-                        this.emit('Download', text )
+                        this.emit('programNode', text )
                     }, staggeredTimeout += i, eeprom)
                 }
             }
@@ -316,7 +316,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         setTimeout(() => {
             // Verify Checksum
             // 00049272: Send: :X00080004N000000000D034122;
-            winston.debug({message: 'CBUS Download: Sending Check firmware'});
+            winston.debug({message: 'programNode: Sending Check firmware'});
             var msgData = cbusLib.encode_EXT_PUT_CONTROL('000000', 0x0D, 0x03, parseInt(calculatedChecksum.substr(2,2), 16), parseInt(calculatedChecksum.substr(0,2),16))
             this.client.write(msgData)
         },  staggeredTimeout += 200)
@@ -349,7 +349,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         try {
           var intelHexString = fs.readFileSync(FILENAME);
         } catch (error) {
-            winston.debug({message: 'CBUS Download: File read error: ' + error});
+            winston.debug({message: 'programNode: File read error: ' + error});
             throw('File read error: ' + error)
         }
         
@@ -359,14 +359,14 @@ class cbusFirmwareDownload extends EventEmitter  {
       
         readInterface.on('line', function(line) {
             decodeLine(firmware, line, function (firmwareObject) {
-                winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> end of file callback'})
+                winston.debug({message: 'programNode: >>>>>>>>>>>>> end of file callback'})
                 for (const area in firmwareObject) {
                     for (const block in firmwareObject[area]) {
-                        winston.debug({message: 'CBUS Download: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
+                        winston.debug({message: 'programNode: EOF callback: FIRMWARE: ' + area + ': ' + block + ' length: ' + firmwareObject[area][block].length});
                     }
                 }  
                 if(CALLBACK) {CALLBACK(firmwareObject)}
-                else {winston.info({message: 'CBUS Download: read hex file: WARNING - No EOF callback'})}
+                else {winston.info({message: 'programNode: read hex file: WARNING - No EOF callback'})}
             })
         });  
     }
@@ -381,7 +381,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         // cpu type is a byte value at 0x828
         //
         var targetCPU = FIRMWARE['FLASH']['00000800'][0x28]
-        winston.debug({message: 'CBUS Download: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
+        winston.debug({message: 'programNode: >>>>>>>>>>>>> cpu check: selected target: ' + nodeCPU + ' firmware target: ' + targetCPU})
         if (nodeCPU == targetCPU) {return true}
         else {return false}    
     }    

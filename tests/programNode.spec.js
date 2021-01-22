@@ -10,15 +10,13 @@ const Mock_Cbus = require('./mock_CbusNetwork.js')
 const NET_PORT = 5552;
 const NET_ADDRESS = "127.0.0.1"
 
-//const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-
-describe('cbusFirmwareDownload tests', function(){
+describe('programNode tests', function(){
   	let mock_Cbus = new Mock_Cbus.mock_CbusNetwork(NET_PORT);
     
 	before(function(done) {
 		winston.info({message: ' '});
 		winston.info({message: '======================================================================'});
-		winston.info({message: '--------------------- cbusFirmwareDownload tests ---------------------'});
+		winston.info({message: '------------------------ Program Node tests --------------------------'});
 		winston.info({message: '======================================================================'});
 		winston.info({message: ' '});
         done();
@@ -32,7 +30,7 @@ describe('cbusFirmwareDownload tests', function(){
 	after(function(done) {
    		winston.debug({message: ' '});   // blank line to separate tests
         setTimeout(() => {
-            winston.debug({message: 'TEST: cbusFirmwareDownload: Tests ended'});
+            winston.debug({message: 'TEST: programNode: Tests ended'});
             done();
         }, 1000)
 	});																										
@@ -47,12 +45,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Checksum test', function(done) {
 		winston.debug({message: 'TEST: Checksum:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
         // expect to get two's compliment of 16 bit checksum returned
         var array = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]
         // checksum of above is 06F9, so two's complement is F907
         var expected  = 'F907'
-        expect(cbusFirmwareDownload.arrayChecksum(array)).to.equal(expected);
+        expect(programNode.arrayChecksum(array)).to.equal(expected);
         done();
 	});
 
@@ -62,13 +60,13 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Read Hex File test', function(done) {
 		winston.debug({message: 'TEST: Read Hex File test:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
         var callbackInvoked = false
-		cbusFirmwareDownload.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
+		programNode.readHexFile('./tests/test_firmware/CANACC5_v2v.HEX', 
             function(firmwareObject){ 
                 winston.debug({message: 'TEST: Read Hex File Test: callback invoked: ' + JSON.stringify(firmwareObject)});
                 expect(firmwareObject["FLASH"]['00000800'].length).to.equal(6064, 'FLASH length'); 
-                expect(cbusFirmwareDownload.arrayChecksum(firmwareObject["FLASH"]['00000800'])).to.equal('2241','checksum');
+                expect(programNode.arrayChecksum(firmwareObject["FLASH"]['00000800'])).to.equal('2241','checksum');
                 callbackInvoked = true
             }
         );
@@ -84,10 +82,10 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Read Hex missing File test', function(done) {
 		winston.debug({message: 'TEST: read missing file:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
         var errorString = ""
         try {
-            cbusFirmwareDownload.readHexFile('./tests/test_firmware/missingFile.hex');
+            programNode.readHexFile('./tests/test_firmware/missingFile.hex');
         } catch (error) {
             winston.debug({message: 'TEST: File read: ' + error});
             errorString = error
@@ -104,10 +102,10 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('decode line test', function(done) {
 		winston.debug({message: 'TEST: decode line:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
         var callbackInvoked = false
         var firmware = {}
-		cbusFirmwareDownload.decodeLine(firmware, ':00000001FF', function(){ callbackInvoked = true;});
+		programNode.decodeLine(firmware, ':00000001FF', function(){ callbackInvoked = true;});
         expect(callbackInvoked).to.equal(true, 'callbackInvoked');
         done();
 	});
@@ -124,12 +122,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download full test', function(done) {
 		winston.debug({message: 'TEST: full download:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-        cbusFirmwareDownload.on('Download', function (data) {
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
+        programNode.on('programNode', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/shortFile.HEX', 3);
+		programNode.download(300, 1, './tests/test_firmware/shortFile.HEX', 3);
 		setTimeout(function(){
             //
             // expect first message to be BOOTM
@@ -140,7 +138,7 @@ describe('cbusFirmwareDownload tests', function(){
             //
             // verify checksum when process is signalled as complete
             expect(downloadData).to.equal('Complete', 'Download event');
-            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
+            expect(programNode.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
             //
             // check last message is a reset command
             var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
@@ -164,12 +162,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download full2 test', function(done) {
 		winston.debug({message: 'TEST: full download:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-        cbusFirmwareDownload.on('Download', function (data) {
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
+        programNode.on('programNode', function (data) {
 			downloadData = data;
 			winston.info({message: 'TEST: full download: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 3);
+		programNode.download(300, 1, './tests/test_firmware/CANACC5_v2v.HEX', 3);
 		setTimeout(function(){
             //
             // expect first message to be BOOTM
@@ -180,7 +178,7 @@ describe('cbusFirmwareDownload tests', function(){
             //
             // verify checksum when process is signalled as complete
             expect(downloadData).to.equal('Complete', 'Download event');
-//            expect(cbusFirmwareDownload.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
+//            expect(programNode.arrayChecksum(mock_Cbus.firmware)).to.equal('C68E', 'Checksum');
             //
             // check last message is a reset command
             var lastMsg = cbusLib.decode(mock_Cbus.sendArray[mock_Cbus.sendArray.length - 1])
@@ -198,12 +196,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download wrong file test', function(done) {
 		winston.debug({message: 'TEST: wrong file:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-        cbusFirmwareDownload.once('Download', function (data) {
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
+        programNode.once('programNode', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: wrong file: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 0, './tests/test_firmware/paramsOnly.HEX', 0);
+		programNode.download(300, 0, './tests/test_firmware/paramsOnly.HEX', 0);
 		setTimeout(function(){
             expect(downloadData).to.equal('CPU mismatch', 'Download event');
 			done();
@@ -216,12 +214,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download ignore CPUTYPE test', function(done) {
 		winston.debug({message: 'TEST: ignore CPUTYPE:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-        cbusFirmwareDownload.once('Download', function (data) {
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
+        programNode.once('programNode', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: ignore CPUTYPE: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 99, './tests/test_firmware/paramsOnly.HEX', 4);
+		programNode.download(300, 99, './tests/test_firmware/paramsOnly.HEX', 4);
 		setTimeout(function(){
             expect(downloadData).to.equal('CPUTYPE ignored', 'Download event');
 			done();
@@ -234,12 +232,12 @@ describe('cbusFirmwareDownload tests', function(){
     //
 	it('Download file not found test', function(done) {
 		winston.debug({message: 'TEST: file not found:'});
-        const cbusFirmwareDownload = require('./../merg/cbusFirmwareDownload.js')(NET_ADDRESS, NET_PORT)
-        cbusFirmwareDownload.once('Download', function (data) {
+        const programNode = require('./../merg/programNode.js')(NET_ADDRESS, NET_PORT)
+        programNode.once('programNode', function (data) {
 			downloadData = data;
 			winston.debug({message: 'TEST: file not found: ' + JSON.stringify(downloadData)});
 			});	        
-		cbusFirmwareDownload.download(300, 1, './FNF.hex', 4);
+		programNode.download(300, 1, './FNF.hex', 4);
 		setTimeout(function(){
             expect(downloadData).to.include('File read error: Error: ', 'errorString');
 			done();
