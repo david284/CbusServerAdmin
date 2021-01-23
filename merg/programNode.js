@@ -220,7 +220,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                 setTimeout(() => {
                     winston.debug({message: 'programNode: ***************** download: ENDING - success is ' + this.success});
                     if (this.success == false) { this.emit('programNode', 'Failed: Timeout') }               
-                }, 10000)
+                }, 25000)
                 
             }.bind(this))
         } catch (error) {
@@ -238,6 +238,7 @@ class cbusFirmwareDownload extends EventEmitter  {
         // sending the firmware needs to be done in 8 byte messages
         // and to allow the receiving module to keep up, we use an incrementing 'stagger' value on the timeout
         //
+        var pauseTime = 30
         var staggeredTimeout = 0;
         // we need to keep a running checksum of all the data we send, so we can include it in the check message at the end
         var calculatedChecksum;
@@ -262,7 +263,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                     var text = 'Progress: FLASH ' + Math.round(i/program.length * 100) + '%'
                     this.emit('programNode', text )
                 }
-            }, staggeredTimeout += 4, program)
+            }, staggeredTimeout += pauseTime, program)
         }
         
         if (FLAGS & 0x1) {      // Program CONFIG area
@@ -284,7 +285,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                         // report progress on every message
                         var text = 'Progress: CONFIG ' + Math.round(i/config.length * 100) + '%'
                         this.emit('programNode', text )
-                    }, staggeredTimeout += 4, config)
+                    }, staggeredTimeout += pauseTime, config)
                 }
             }
         }
@@ -308,7 +309,7 @@ class cbusFirmwareDownload extends EventEmitter  {
                         // report progress on every message
                         var text = 'Progress: EEPROM ' + Math.round(i/eeprom.length * 100) + '%  ' +  + i/eeprom.length
                         this.emit('programNode', text )
-                    }, staggeredTimeout += 4, eeprom)
+                    }, staggeredTimeout += pauseTime, eeprom)
                 }
             }
         }
