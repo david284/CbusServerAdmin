@@ -187,7 +187,7 @@ describe('programNode tests', function(){
             expect(lastMsg.type).to.equal('CONTROL', 'last message control type');
             expect(lastMsg.SPCMD).to.equal(1, 'last message reset command');
 			done();
-		}, 11000);
+		}, 25000);
 	});
 
 
