@@ -924,7 +924,8 @@ describe('Websocket server tests', function(){
 			'Message': value.message,
 			'data': decToHex(value.data1,2) + decToHex(value.data2,2)
 			}
-		websocket_Client.on('dccError', function (data) {
+        dccErrorData = []
+        websocket_Client.on('dccError', function (data) {
 			dccErrorData = data;
 			winston.info({message: 'wsserver Test: dccError test - data : ' + JSON.stringify(dccErrorData)});
 			});	
@@ -933,7 +934,7 @@ describe('Websocket server tests', function(){
 			expect(JSON.stringify(dccErrorData)).to.equal(JSON.stringify(testCase));
 			websocket_Client.off('dccError');
 			done();
-			}, 10);
+			}, 20);
 	});
 
 	function dccSessions_TestCase () {
@@ -978,6 +979,7 @@ describe('Websocket server tests', function(){
 
 	itParam('dccSessions test session ${value.session} fn1 ${value.fn1} fn2 ${value.fn2}', dccSessions_TestCase(), function(done, value) {
 		winston.info({message: 'wsserver Test: START dccSessions test ' + JSON.stringify(value)});
+        dccSessionsData = []
 		websocket_Client.on('dccSessions', function (data) {
 			dccSessionsData = data;
 			winston.info({message: 'wsserver Test: dccSessions test - message data : ' + JSON.stringify(dccSessionsData)});
@@ -988,7 +990,7 @@ describe('Websocket server tests', function(){
 			expect(dccSessionsData[value.session]['F' + value.fn1]).to.equal(value.fn2);
 			websocket_Client.off('dccSessions');
 			done();
-			}, 10);
+			}, 20);
 	});
 
 
@@ -1037,12 +1039,14 @@ describe('Websocket server tests', function(){
 
 	it('node test', function(done) {
 		winston.info({message: 'wsserver: node test'});
+        nodeData = []
 		websocket_Client.on('nodes', function (data) {
 			nodeData = data;
 			winston.info({message: 'wsserver: START node test - message data : ' + JSON.stringify(nodeData)});
 			});	
 		mock_Cbus.outputPNN(0);
 		setTimeout(function(){
+			winston.info({message: 'TEST: wsserver: node test - message data : ' + JSON.stringify(nodeData)});
 			expect(nodeData[0].module).to.equal("CANACC8");
 			websocket_Client.off('nodes');
 			done();
@@ -1053,6 +1057,7 @@ describe('Websocket server tests', function(){
 	it('requestNodeNumber test', function(done) {
 		winston.info({message: 'wsserver: requestNodeNumber test'});
 		mock_Cbus.clearSendArray();
+        nodeData = []
 		websocket_Client.on('layoutDetails', function (data) {
 			nodeData = data;
 			winston.info({message: 'wsserver: START requestNodeNumber test - message data : ' + JSON.stringify(nodeData)});
